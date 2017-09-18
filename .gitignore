@@ -3,3 +3,7 @@
 ################################################################################
 
 /.vs/Oogi2/v15
+/Oogi2/bin/Debug/netstandard2.0
+/Oogi2/obj
+/Oogi2.Tests/bin/Debug/netstandard2.0
+/Oogi2.Tests/obj
