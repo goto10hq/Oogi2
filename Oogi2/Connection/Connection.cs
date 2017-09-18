@@ -10,21 +10,47 @@ using Microsoft.Azure.Documents.Linq;
 
 namespace Oogi2
 {
+    /// <summary>
+    /// Connection.
+    /// </summary>
     public class Connection : IConnection
     {
+        /// <summary>
+        /// Gets the client.
+        /// </summary>
+        /// <value>The client.</value>
         public DocumentClient Client { get; private set; }
 
+        /// <summary>
+        /// Gets the database identifier.
+        /// </summary>
+        /// <value>The database identifier.</value>
         public string DatabaseId { get; private set; }
+
+        /// <summary>
+        /// Gets the collection identifier.
+        /// </summary>
+        /// <value>The collection identifier.</value>
         public string CollectionId { get; private set; }
 
+        /// <summary>
+        /// Initializes the <see cref="T:Oogi2.Connection"/> class.
+        /// Set default Json ser/deser settings.
+        /// TODO: provide trought settings in ctor.
+        /// </summary>
         static Connection()
         {
             Tools.SetJsonDefaultSettings();    
         }
 
         /// <summary>
-        /// Ctor.
+        /// Initializes a new instance of the <see cref="T:Oogi2.Connection"/> class.
         /// </summary>
+        /// <param name="endpoint">Endpoint.</param>
+        /// <param name="authorizationKey">Authorization key.</param>
+        /// <param name="database">Database.</param>
+        /// <param name="collection">Collection.</param>
+        /// <param name="connectionPolicy">Connection policy.</param>
         public Connection(string endpoint, string authorizationKey, string database, string collection, ConnectionPolicy connectionPolicy = null)
         {
             var defaultConnectionPolicy = new ConnectionPolicy
@@ -39,17 +65,21 @@ namespace Oogi2
         }
 
         /// <summary>
-        /// Upsert document(s) as pure json.
+        /// Upserts the json document(s) directly.
         /// </summary>
+        /// <returns>Objects.</returns>
+        /// <param name="jsonString">Json string.</param>
         public List<object> UpsertJson(string jsonString)
         {
             return AsyncTools.RunSync(() => UpsertJsonAsync(jsonString));
         }
 
-        /// <summary>
-        /// Upsert document(s) as pure json.
-        /// </summary>
-        public async Task<List<object>> UpsertJsonAsync(string jsonString)
+		/// <summary>
+		/// Upserts the json document(s) directly.
+		/// </summary>
+		/// <returns>Objects.</returns>
+		/// <param name="jsonString">Json string.</param>
+		public async Task<List<object>> UpsertJsonAsync(string jsonString)
         {
             if (jsonString == null)
                 throw new ArgumentNullException(nameof(jsonString));
@@ -66,8 +96,10 @@ namespace Oogi2
         }
 
         /// <summary>
-        /// Execute query.
+        /// Executes the query async.
         /// </summary>
+        /// <returns>The query async.</returns>
+        /// <param name="query">Query.</param>
         public async Task<object> ExecuteQueryAsync(string query)
         {            
             var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();            
@@ -76,9 +108,11 @@ namespace Oogi2
             return result;
         }
 
-        /// <summary>
-        /// Execute query.
-        /// </summary>
+         /// <summary>
+         /// Executes the query.
+         /// </summary>
+         /// <returns>The query.</returns>
+         /// <param name="query">Query.</param>
         public object ExecuteQuery(string query)
         {                        
             var result = AsyncTools.RunSync(() => ExecuteQueryAsync(query));
@@ -87,58 +121,88 @@ namespace Oogi2
         }
 
         /// <summary>
-        /// Create store procedure.
+        /// Creates the stored procedure async.
         /// </summary>
-        public async Task<StoredProcedure> CreateStoredProcedureAsync(StoredProcedure sp)
+        /// <returns>The stored procedure.</returns>
+        /// <param name="storedProcedure">Stored procedure.</param>
+        public async Task<StoredProcedure> CreateStoredProcedureAsync(StoredProcedure storedProcedure)
         {         
-            StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), sp);
+            StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), storedProcedure);
+
             return createdStoredProcedure;
         }
 
         /// <summary>
-        /// Read store procedure.
+        /// Reads the stored procedure async.
         /// </summary>
-        public async Task<StoredProcedure> ReadStoredProcedureAsync(string storeProcedureId)
+        /// <returns>The stored procedure.</returns>
+        /// <param name="storedProcedureId">Stored procedure identifier.</param>
+        public async Task<StoredProcedure> ReadStoredProcedureAsync(string storedProcedureId)
         {            
-            StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storeProcedureId));
+            StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId));
+
             return storedProcedure;
         }
 
         /// <summary>
-        /// Read store procedure.
+        /// Reads the stored procedure.
         /// </summary>
-        public StoredProcedure ReadStoredProcedure(string storeProcedureId)
+        /// <returns>The stored procedure.</returns>
+        /// <param name="storedProcedureId">Stored procedure identifier.</param>
+        public StoredProcedure ReadStoredProcedure(string storedProcedureId)
         {
-            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storeProcedureId)));
+            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)));
+
             return storedProcedure;
         }
 
         /// <summary>
-        /// Delete store procedure.
+        /// Deletes the stored procedure async.
         /// </summary>
-        public async Task<StoredProcedure> DeleteStoredProcedureAsync(string storeProcedureId)
+        /// <returns>The stored procedure async.</returns>
+        /// <param name="storedProcedureId">Stored procedure identifier.</param>
+        public async Task<StoredProcedure> DeleteStoredProcedureAsync(string storedProcedureId)
         {
-            StoredProcedure storedProcedure = await Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storeProcedureId));
+            StoredProcedure storedProcedure = await Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId));
+
             return storedProcedure;
         }
 
         /// <summary>
-        /// Delete store procedure.
+        /// Deletes the stored procedure.
         /// </summary>
-        public StoredProcedure DeleteStoredProcedure(string storeProcedureId)
+        /// <returns>The stored procedure.</returns>
+        /// <param name="storedProcedureId">Stored procedure identifier.</param>
+        public StoredProcedure DeleteStoredProcedure(string storedProcedureId)
         {
-            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storeProcedureId)));
+            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)));
+
             return storedProcedure;
         }
 
         /// <summary>
-        /// Create store procedure.
+        /// Creates the stored procedure.
         /// </summary>
-        public StoredProcedure CreateStoredProcedure(StoredProcedure sp)
+        /// <returns>The stored procedure.</returns>
+        /// <param name="storedProcedure">Stored procedure.</param>
+        public StoredProcedure CreateStoredProcedure(StoredProcedure storedProcedure)
         {
-            return AsyncTools.RunSync(() => CreateStoredProcedureAsync(sp));
-        }              
+            return AsyncTools.RunSync(() => CreateStoredProcedureAsync(storedProcedure));
+        }
 
+        /// <summary>
+        /// Deletes the document.
+        /// </summary>
+        /// <returns>Document?</returns>
+        /// <param name="id">Identifier.</param>
+        /// <remarks>TODO: check up return type</remarks>
+        public async Task<object> DeleteAsync(string id)
+        {
+            var response = await Core.ExecuteWithRetriesAsync(() => Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)));
+
+            return response;
+        }
+        
         static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
         {
             var entitiesRetrieved = new List<dynamic>();
@@ -160,14 +224,5 @@ namespace Oogi2
         {
             return await query.ExecuteNextAsync<dynamic>();
         }
-
-        /// <summary>
-        /// Delete document by id.
-        /// </summary>
-        public async Task<object> DeleteAsync(string id)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)));
-            return response;
-        }        
     }
 }

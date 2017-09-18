@@ -5,12 +5,15 @@ using Newtonsoft.Json.Serialization;
 
 namespace Oogi2
 {
+    /// <summary>
+    /// Tools.
+    /// </summary>
     public static class Tools
     {
         /// <summary>
-        /// Set Json default settings.
+        /// Sets the json default settings.
         /// </summary>
-        public static void SetJsonDefaultSettings()
+        internal static void SetJsonDefaultSettings()
         {
             JsonConvert.DefaultSettings = () => new JsonSerializerSettings
             {
@@ -21,18 +24,22 @@ namespace Oogi2
         }
 
         /// <summary>
-        /// Escape value.
+        /// Escapes string.
         /// </summary>
-        public static string ToEscapedString(this string value)
+        /// <returns>The escaped string.</returns>
+        /// <param name="text">String.</param>
+        internal static string ToEscapedString(this string text)
         {
-            value = value ?? string.Empty;
-            return value.Replace(@"\", @"\\").Replace("'", @"\'");
+            text = text ?? string.Empty;
+            return text.Replace(@"\", @"\\").Replace("'", @"\'");
         }
 
         /// <summary>
-        /// Convert anonymous object to parameters.
+        /// Converts anonymous object to sql parameters collection.
         /// </summary>
-        public static SqlParameterCollection AnonymousObjectToSqlParameters(object parameters)
+        /// <returns>Sql parameters collections.</returns>
+        /// <param name="parameters">Anonymous object.</param>
+        internal static SqlParameterCollection AnonymousObjectToSqlParameters(object parameters)
         {
             if (parameters == null)
                 return new SqlParameterCollection();
