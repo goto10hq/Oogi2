@@ -4,7 +4,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Oogi2;
 using Oogi2.Queries;
 using Oogi2.Tokens;
-using Oogi2.Attributes;
 
 namespace Tests
 {
