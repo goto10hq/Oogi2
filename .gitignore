@@ -11,3 +11,5 @@
 /Oogi2.Tests/bin/Debug/netcoreapp2.0
 Oogi2.userprefs
 Oogi2.Tests/Oogi2.Tests.userprefs
+Oogi2.Cmd/bin/
+Oogi2.Cmd/obj/

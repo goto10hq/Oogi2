@@ -98,173 +98,173 @@ namespace Tests
             Assert.AreEqual(_robots.Count, robots.Count);
         }
 
-        [TestMethod]
-        public void SelectByNonExistentEnum()
-        {
-            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state = @state",
-                new
-                {
-                    entity = _entity,
-                    state = State.Destroyed
-                });
+        //[TestMethod]
+        //public void SelectByNonExistentEnum()
+        //{
+        //    var q = new DynamicQuery("select * from c where c.entity = @entity and c.state = @state",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            state = State.Destroyed
+        //        });
 
-            var robots = _repo.GetList(q);
+        //    var robots = _repo.GetList(q);
 
-            Assert.AreEqual(_robots.Count(x => x.State == State.Destroyed), robots.Count);
-        }
+        //    Assert.AreEqual(_robots.Count(x => x.State == State.Destroyed), robots.Count);
+        //}
 
-        [TestMethod]
-        public void SelectByMoreEnumsAsList()
-        {
-            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
-                new
-                {
-                    entity = _entity,
-                    states = new List<State> { State.Ready, State.Sleeping }
-                });
+        //[TestMethod]
+        //public void SelectByMoreEnumsAsList()
+        //{
+        //    var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            states = new List<State> { State.Ready, State.Sleeping }
+        //        });
 
-            var robots = _repo.GetList(q);
+        //    var robots = _repo.GetList(q);
 
-            Assert.AreEqual(_robots.Count(x => x.State != State.Destroyed), robots.Count);
-        }
+        //    Assert.AreEqual(_robots.Count(x => x.State != State.Destroyed), robots.Count);
+        //}
 
-        [TestMethod]
-        public void SelectByMoreEnumsAsFirstOrDefault()
-        {
-            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
-                new
-                {
-                    entity = _entity,
-                    states = new List<State> { State.Destroyed, State.Sleeping }
-                });
+        //[TestMethod]
+        //public void SelectByMoreEnumsAsFirstOrDefault()
+        //{
+        //    var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            states = new List<State> { State.Destroyed, State.Sleeping }
+        //        });
 
-            var robot = _repo.GetFirstOrDefault(q);
+        //    var robot = _repo.GetFirstOrDefault(q);
 
-            Assert.AreEqual("Nausica", robot.Name);
-        }
+        //    Assert.AreEqual("Nausica", robot.Name);
+        //}
 
-        [TestMethod]
-        public void SelectByMoreEnumsAsFirstOrDefaultWithNoResult()
-        {
-            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
-                new
-                {
-                    entity = _entity,
-                    states = new List<State> { State.Destroyed, State.Destroyed, State.Destroyed }
-                });
+        //[TestMethod]
+        //public void SelectByMoreEnumsAsFirstOrDefaultWithNoResult()
+        //{
+        //    var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            states = new List<State> { State.Destroyed, State.Destroyed, State.Destroyed }
+        //        });
 
-            var robot = _repo.GetFirstOrDefault(q);
+        //    var robot = _repo.GetFirstOrDefault(q);
 
-            Assert.AreEqual(null, robot);
-        }
+        //    Assert.AreEqual(null, robot);
+        //}
 
-        [TestMethod]
-        public void SelectList()
-        {
-            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.artificialIq > @iq",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@entity", _entity),
-                    new SqlParameter("@iq", 120)
-                });
+        //[TestMethod]
+        //public void SelectList()
+        //{
+        //    var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.artificialIq > @iq",
+        //        new SqlParameterCollection
+        //        {
+        //            new SqlParameter("@entity", _entity),
+        //            new SqlParameter("@iq", 120)
+        //        });
 
-            var robots = _repo.GetList(q);
+        //    var robots = _repo.GetList(q);
 
-            Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), robots.Count);
-        }
+        //    Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), robots.Count);
+        //}
 
-        [TestMethod]
-        public void SelectListDynamic()
-        {
-            var robots = _repo.GetList("select * from c where c.entity = @entity and c.artificialIq > @iq",
-                new
-                {
-                    entity = _entity,
-                    iq = 120
-                });
+        //[TestMethod]
+        //public void SelectListDynamic()
+        //{
+        //    var robots = _repo.GetList("select * from c where c.entity = @entity and c.artificialIq > @iq",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            iq = 120
+        //        });
 
-            Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), robots.Count);
-        }
+        //    Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), robots.Count);
+        //}
 
-        [TestMethod]
-        public void SelectFirstOrDefault()
-        {
-            var robot = _repo.GetFirstOrDefault();
+        //[TestMethod]
+        //public void SelectFirstOrDefault()
+        //{
+        //    var robot = _repo.GetFirstOrDefault();
 
-            Assert.AreNotEqual(robot, null);
-            Assert.AreEqual(100, robot.ArtificialIq);
+        //    Assert.AreNotEqual(robot, null);
+        //    Assert.AreEqual(100, robot.ArtificialIq);
 
-            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.artificialIq = @iq")
-            {
-                Parameters = new SqlParameterCollection
-                                     {
-                                         new SqlParameter("@entity", _entity),
-                                         new SqlParameter("@iq", 190)
-                                     }
-            };
+        //    var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.artificialIq = @iq")
+        //    {
+        //        Parameters = new SqlParameterCollection
+        //                             {
+        //                                 new SqlParameter("@entity", _entity),
+        //                                 new SqlParameter("@iq", 190)
+        //                             }
+        //    };
 
-            robot = _repo.GetFirstOrDefault(q);
+        //    robot = _repo.GetFirstOrDefault(q);
 
-            Assert.AreNotEqual(robot, null);
-            Assert.AreEqual(190, robot.ArtificialIq);
+        //    Assert.AreNotEqual(robot, null);
+        //    Assert.AreEqual(190, robot.ArtificialIq);
 
-            robot = _repo.GetFirstOrDefault("select * from c where c.entity = @entity and c.artificialIq = @iq",
-                new
-                {
-                    entity = _entity,
-                    iq = 190
-                });
+        //    robot = _repo.GetFirstOrDefault("select * from c where c.entity = @entity and c.artificialIq = @iq",
+        //        new
+        //        {
+        //            entity = _entity,
+        //            iq = 190
+        //        });
 
-            Assert.AreNotEqual(robot, null);
-            Assert.AreEqual(190, robot.ArtificialIq);
-        }
+        //    Assert.AreNotEqual(robot, null);
+        //    Assert.AreEqual(190, robot.ArtificialIq);
+        //}
 
-        [TestMethod]
-        public void SelectEscaped()
-        {
-            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.message = @message")
-            {
-                Parameters = new SqlParameterCollection
-                                     {
-                                         new SqlParameter("@entity", _entity),
-                                         new SqlParameter("@message", @"\'\\''")
-                                     }
-            };
+        //[TestMethod]
+        //public void SelectEscaped()
+        //{
+        //    var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.message = @message")
+        //    {
+        //        Parameters = new SqlParameterCollection
+        //                             {
+        //                                 new SqlParameter("@entity", _entity),
+        //                                 new SqlParameter("@message", @"\'\\''")
+        //                             }
+        //    };
 
 
-            var robot = _repo.GetFirstOrDefault(q);
-            Assert.AreNotEqual(robot, null);
+        //    var robot = _repo.GetFirstOrDefault(q);
+        //    Assert.AreNotEqual(robot, null);
 
-            if (robot != null)
-            {
-                var oldId = robot.Id;
-                _repo.GetFirstOrDefault(oldId);
+        //    if (robot != null)
+        //    {
+        //        var oldId = robot.Id;
+        //        _repo.GetFirstOrDefault(oldId);
 
-                Assert.AreNotEqual(robot, null);
-                Assert.AreEqual(robot.Id, oldId);
+        //        Assert.AreNotEqual(robot, null);
+        //        Assert.AreEqual(robot.Id, oldId);
 
-            }
-        }
+        //    }
+        //}
 
-        [TestMethod]
-        public void Delete()
-        {
-            var robots = _repo.GetList("select * from c where c.entity = @entity order by c.artificialIq", new { entity = _entity });
+        //[TestMethod]
+        //public void Delete()
+        //{
+        //    var robots = _repo.GetList("select * from c where c.entity = @entity order by c.artificialIq", new { entity = _entity });
 
-            Assert.AreEqual(_robots.Count, robots.Count);
+        //    Assert.AreEqual(_robots.Count, robots.Count);
 
-            var dumbestRobotId = robots[0].Id;
+        //    var dumbestRobotId = robots[0].Id;
 
-            _repo.Delete(dumbestRobotId);
+        //    _repo.Delete(dumbestRobotId);
 
-            var smartestRobot = robots[robots.Count - 1];
+        //    var smartestRobot = robots[robots.Count - 1];
 
-            _repo.Delete(smartestRobot);
+        //    _repo.Delete(smartestRobot);
 
-            robots = _repo.GetAll();
+        //    robots = _repo.GetAll();
 
-            Assert.AreEqual(1, robots.Count);
-            Assert.AreEqual(_robots.OrderBy(x => x.ArtificialIq).Skip(1).First().ArtificialIq, robots[0].ArtificialIq);
-        }
+        //    Assert.AreEqual(1, robots.Count);
+        //    Assert.AreEqual(_robots.OrderBy(x => x.ArtificialIq).Skip(1).First().ArtificialIq, robots[0].ArtificialIq);
+        //}
     }
 }
