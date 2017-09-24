@@ -17,6 +17,7 @@ namespace Tests
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json")
                 .AddUserSecrets("oogi2")
+                .AddEnvironmentVariables()
                 .Build();
 
             _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);                        
