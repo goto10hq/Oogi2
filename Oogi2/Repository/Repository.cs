@@ -136,15 +136,13 @@ namespace Oogi2
             var ret = AsyncTools.RunSync(() => UpsertAsync(entity));
             return ret;
         }
-		
+
         /// <summary>
         /// Create entity.
         /// </summary>
         public async Task<T> CreateAsync(T entity)
         {
-            var ro = new RequestOptions();
-            
-            var response = await Core.ExecuteWithRetriesAsync(() => CreateDocumentAsync(entity, ro));
+            var response = await Core.ExecuteWithRetriesAsync(() => CreateDocumentAsync(entity));
             return response;            
         }
 
@@ -311,11 +309,11 @@ namespace Oogi2
             return await query.ExecuteNextAsync<T>();
         }
         
-        async Task<T> CreateDocumentAsync(T entity, RequestOptions requestOptions)
+        async Task<T> CreateDocumentAsync(T entity)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando, requestOptions));
+            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando));
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
