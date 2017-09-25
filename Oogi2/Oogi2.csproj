@@ -14,7 +14,8 @@
     <PackageTags>documentdb repository</PackageTags>
     <Copyright>Copyright (c) 2017 Goto10 s.r.o.</Copyright>
     <Company>Goto10</Company>
-    <RepositoryUrl>https://github.com/goto10hq/Oogi2</RepositoryUrl> 
+    <RepositoryUrl>https://github.com/goto10hq/Oogi2</RepositoryUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/goto10hq/Oogi2/master/oogi2-icon.png</PackageIconUrl> 
   </PropertyGroup>
 
   <ItemGroup>
