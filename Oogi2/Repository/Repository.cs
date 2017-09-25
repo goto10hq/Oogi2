@@ -34,8 +34,8 @@ namespace Oogi2
             }
 
             var sq = sqlq.ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-            var response = await Core.ExecuteWithRetriesAsync(() => QuerySingleDocumentAsync(q));
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();            
+            var response = await QuerySingleDocumentAsync(q);
             return response.AsEnumerable().FirstOrDefault();
         }
 
@@ -123,8 +123,8 @@ namespace Oogi2
         /// Upsert entity.
         /// </summary>
         public async Task<T> UpsertAsync(T entity)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => UpsertDocumentAsync(entity));
+        {            
+            var response = await UpsertDocumentAsync(entity);
             return response;
         }
 
@@ -141,8 +141,8 @@ namespace Oogi2
         /// Create entity.
         /// </summary>
         public async Task<T> CreateAsync(T entity)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => CreateDocumentAsync(entity));
+        {            
+            var response = await CreateDocumentAsync(entity);
             return response;            
         }
 
@@ -159,8 +159,8 @@ namespace Oogi2
         /// Replace entity.
         /// </summary>
         public async Task<T> ReplaceAsync(T entity)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => ReplaceDocumentAsync(entity));
+        {            
+            var response = await ReplaceDocumentAsync(entity);
             return response;
         }
 
@@ -177,8 +177,8 @@ namespace Oogi2
         /// Delete entity.
         /// </summary>
         public async Task<T> DeleteAsync(string id)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => DeleteDocumentAsync(id));            
+        {            
+            var response = await DeleteDocumentAsync(id);
             return response;            
         }
 
@@ -195,8 +195,8 @@ namespace Oogi2
         /// Delete entity.
         /// </summary>
         public async Task<T> DeleteAsync(T entity)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => DeleteDocumentAsync(entity));
+        {            
+            var response = await DeleteDocumentAsync(entity);
             return response;
         }
 
@@ -212,38 +212,38 @@ namespace Oogi2
 		/// <summary>
         /// Get list of all entities from query.
         /// </summary>        
-        public async Task<List<T>> GetAllAsync()
+        public async Task<IList<T>> GetAllAsync()
         {            
             var query = new SqlQuerySpecQuery<T>();
 		    var sq = query.ToGetAll().ToSqlQuery(); 
             var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-
-            var response = await Core.ExecuteWithRetriesAsync(() => QueryMoreDocumentsAsync(q));
+            
+            var response = await QueryMoreDocumentsAsync(q);
             return response;
         }
 
         /// <summary>
         /// Get list of all entities from query.
         /// </summary>        
-        public List<T> GetAll()
+        public IList<T> GetAll()
         {
             var all = AsyncTools.RunSync(GetAllAsync);
             return all;
         }
 
-        async Task<List<T>> GetListHelperAsync(IQuery query)
+        async Task<IList<T>> GetListHelperAsync(IQuery query)
         {
             var sq = query.ToSqlQuerySpec().ToSqlQuery();
             var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-
-            var response = await Core.ExecuteWithRetriesAsync(() => QueryMoreDocumentsAsync(q));
+            
+            var response = await QueryMoreDocumentsAsync(q);
             return response;
         }
 
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public async Task<List<T>> GetListAsync(SqlQuerySpec query)
+        public async Task<IList<T>> GetListAsync(SqlQuerySpec query)
         {
             return await GetListHelperAsync(new SqlQuerySpecQuery<T>(query));
         }
@@ -259,7 +259,7 @@ namespace Oogi2
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public async Task<List<T>> GetListAsync(DynamicQuery query)
+        public async Task<IList<T>> GetListAsync(DynamicQuery query)
         {
             return await GetListHelperAsync(query);
         }
@@ -267,7 +267,7 @@ namespace Oogi2
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public async Task<List<T>> GetListAsync(string query, object parameters)
+        public async Task<IList<T>> GetListAsync(string query, object parameters)
         {
             return await GetListHelperAsync(new DynamicQuery<T>(query, parameters));
         }
@@ -275,7 +275,7 @@ namespace Oogi2
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public List<T> GetList(SqlQuerySpec query)
+        public IList<T> GetList(SqlQuerySpec query)
         {
             return AsyncTools.RunSync(() => GetListAsync(query));
         }
@@ -291,7 +291,7 @@ namespace Oogi2
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public List<T> GetList(DynamicQuery query)
+        public IList<T> GetList(DynamicQuery query)
         {
             return AsyncTools.RunSync(() => GetListAsync(query));
         }
@@ -299,7 +299,7 @@ namespace Oogi2
         /// <summary>
         /// Get list from query.
         /// </summary>        
-        public List<T> GetList(string query, object parameters)
+        public IList<T> GetList(string query, object parameters)
         {
             return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<T>(query, parameters).ToSqlQuerySpec()));
         }       
@@ -312,8 +312,8 @@ namespace Oogi2
         async Task<T> CreateDocumentAsync(T entity)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
-
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando));
+            
+            var response = await _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
@@ -321,8 +321,8 @@ namespace Oogi2
         async Task<T> ReplaceDocumentAsync(T entity)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
-
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando));
+            
+            var response = await _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
@@ -330,22 +330,22 @@ namespace Oogi2
 		async Task<T> UpsertDocumentAsync(T entity)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
-
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando));
+            
+            var response = await _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
 
         async Task<T> DeleteDocumentAsync(T entity)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity))));
+        {            
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)));
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
 
         async Task<T> DeleteDocumentAsync(string id)
-        {
-            var response = await Core.ExecuteWithRetriesAsync(() => _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id)));
+        {            
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id));
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
@@ -355,8 +355,8 @@ namespace Oogi2
             var entitiesRetrieved = new List<T>();
             
             while (query.HasMoreResults)
-            {
-                var queryResponse = await Core.ExecuteWithRetriesAsync(() => QuerySingleDocumentAsync(query));                
+            {                
+                var queryResponse = await QuerySingleDocumentAsync(query);
                 
                 var entities = queryResponse.AsEnumerable();
 

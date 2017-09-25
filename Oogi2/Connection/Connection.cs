@@ -56,7 +56,12 @@ namespace Oogi2
             var defaultConnectionPolicy = new ConnectionPolicy
                                    {                                       
                                        ConnectionMode = ConnectionMode.Direct,
-                                       ConnectionProtocol = Protocol.Tcp
+                                       ConnectionProtocol = Protocol.Tcp,
+                                       RetryOptions = new RetryOptions
+                                       {
+                                           MaxRetryAttemptsOnThrottledRequests = 1000,
+                                           MaxRetryWaitTimeInSeconds = 60
+                                       }
                                    };
 
             Client = new DocumentClient(new Uri(endpoint), authorizationKey, connectionPolicy ?? defaultConnectionPolicy);            
@@ -88,8 +93,8 @@ namespace Oogi2
             var docs = JsonConvert.DeserializeObject<List<object>>(jsonString);
 
             foreach (var doc in docs)
-            {
-                result.Add(await Core.ExecuteWithRetriesAsync(() => Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc)));
+            {                
+                result.Add(await Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc));
             }
 
             return result;
@@ -103,7 +108,7 @@ namespace Oogi2
         public async Task<object> ExecuteQueryAsync(string query)
         {            
             var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();            
-            var result = await Core.ExecuteWithRetriesAsync(() => QueryMoreDocumentsAsync(q));
+            var result = await QueryMoreDocumentsAsync(q);
 
             return result;
         }
@@ -198,7 +203,7 @@ namespace Oogi2
         /// <remarks>TODO: check up return type</remarks>
         public async Task<object> DeleteAsync(string id)
         {
-            var response = await Core.ExecuteWithRetriesAsync(() => Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)));
+            var response = await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
 
             return response;
         }
@@ -208,8 +213,8 @@ namespace Oogi2
             var entitiesRetrieved = new List<dynamic>();
 
             while (query.HasMoreResults)
-            {
-                var queryResponse = await Core.ExecuteWithRetriesAsync(() => QuerySingleDocumentAsync(query));
+            {                
+                var queryResponse = await QuerySingleDocumentAsync(query);
 
                 var entities = queryResponse.AsEnumerable();
 
