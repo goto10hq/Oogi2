@@ -7,6 +7,7 @@ using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Sushi2;
 using Microsoft.Azure.Documents.Linq;
+using System.Runtime.InteropServices;
 
 namespace Oogi2
 {
@@ -63,6 +64,13 @@ namespace Oogi2
                                            MaxRetryWaitTimeInSeconds = 60
                                        }
                                    };
+
+            // direct mode doesn't work on OSX
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                defaultConnectionPolicy.ConnectionMode = ConnectionMode.Gateway;
+                defaultConnectionPolicy.ConnectionProtocol = Protocol.Tcp;
+            }
 
             Client = new DocumentClient(new Uri(endpoint), authorizationKey, connectionPolicy ?? defaultConnectionPolicy);            
             DatabaseId = database;
