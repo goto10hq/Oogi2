@@ -287,7 +287,7 @@ namespace Oogi2
         /// </summary>
         /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public IList<dynamic> GetList(string query, object parameters)
+        public IList<dynamic> GetList(string query, object parameters = null)
         {
             return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<dynamic>(query, parameters).ToSqlQuerySpec()));
         }

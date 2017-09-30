@@ -290,7 +290,7 @@ namespace Oogi2
         /// </summary>
         /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public IList<T> GetList(string query, object parameters)
+        public IList<T> GetList(string query, object parameters = null)
         {
             return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<T>(query, parameters).ToSqlQuerySpec()));
         }
