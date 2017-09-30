@@ -41,7 +41,7 @@ namespace Oogi2
         /// </summary>
         static Connection()
         {
-            Tools.SetJsonDefaultSettings();    
+            Tools.SetJsonDefaultSettings();
         }
 
         /// <summary>
@@ -55,7 +55,7 @@ namespace Oogi2
         public Connection(string endpoint, string authorizationKey, string database, string collection, ConnectionPolicy connectionPolicy = null)
         {
             var defaultConnectionPolicy = new ConnectionPolicy
-                                   {                                       
+                                   {
                                        RetryOptions = new RetryOptions
                                        {
                                            MaxRetryAttemptsOnThrottledRequests = 1000,
@@ -70,7 +70,7 @@ namespace Oogi2
                 defaultConnectionPolicy.ConnectionProtocol = Protocol.Tcp;
             }
 
-            Client = new DocumentClient(new Uri(endpoint), authorizationKey, connectionPolicy ?? defaultConnectionPolicy);            
+            Client = new DocumentClient(new Uri(endpoint), authorizationKey, connectionPolicy ?? defaultConnectionPolicy);
             DatabaseId = database;
             CollectionId = collection;
         }
@@ -99,7 +99,7 @@ namespace Oogi2
             var docs = JsonConvert.DeserializeObject<List<object>>(jsonString);
 
             foreach (var doc in docs)
-            {                
+            {
                 result.Add(await Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc));
             }
 
@@ -112,8 +112,8 @@ namespace Oogi2
         /// <returns>The query async.</returns>
         /// <param name="query">Query.</param>
         public async Task<object> ExecuteQueryAsync(string query)
-        {            
-            var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();            
+        {
+            var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();
             var result = await QueryMoreDocumentsAsync(q);
 
             return result;
@@ -125,7 +125,7 @@ namespace Oogi2
          /// <returns>The query.</returns>
          /// <param name="query">Query.</param>
         public object ExecuteQuery(string query)
-        {                        
+        {
             var result = AsyncTools.RunSync(() => ExecuteQueryAsync(query));
 
             return result;
@@ -137,7 +137,7 @@ namespace Oogi2
         /// <returns>The stored procedure.</returns>
         /// <param name="storedProcedure">Stored procedure.</param>
         public async Task<StoredProcedure> CreateStoredProcedureAsync(StoredProcedure storedProcedure)
-        {         
+        {
             StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), storedProcedure);
 
             return createdStoredProcedure;
@@ -149,7 +149,7 @@ namespace Oogi2
         /// <returns>The stored procedure.</returns>
         /// <param name="storedProcedureId">Stored procedure identifier.</param>
         public async Task<StoredProcedure> ReadStoredProcedureAsync(string storedProcedureId)
-        {            
+        {
             StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId));
 
             return storedProcedure;
@@ -205,26 +205,18 @@ namespace Oogi2
         /// Creates the collection.
         /// </summary>
         /// <returns>The collection.</returns>
-        /// <param name="id">Identifier.</param>
-        public DocumentCollection CreateCollection(string id)
+        public DocumentCollection CreateCollection()
         {
-            if (id == null)
-                throw new ArgumentNullException(nameof(id));
-
-            return AsyncTools.RunSync(() => CreateCollectionAsync(id));
+            return AsyncTools.RunSync(CreateCollectionAsync;
         }
 
         /// <summary>
         /// Creates the collection.
         /// </summary>
         /// <returns>The collection.</returns>
-        /// <param name="id">Identifier.</param>
-        public async Task<DocumentCollection> CreateCollectionAsync(string id)
+        public async Task<DocumentCollection> CreateCollectionAsync()
         {
-            if (id == null)
-                throw new ArgumentNullException(nameof(id));
-            
-            var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = id });
+            var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId });
             return response;
         }
 
@@ -240,13 +232,13 @@ namespace Oogi2
 
             return response;
         }
-        
+
         static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
         {
             var entitiesRetrieved = new List<dynamic>();
 
             while (query.HasMoreResults)
-            {                
+            {
                 var queryResponse = await QuerySingleDocumentAsync(query);
 
                 var entities = queryResponse.AsEnumerable();
