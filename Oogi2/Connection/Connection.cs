@@ -208,7 +208,7 @@ namespace Oogi2
         /// <returns>The collection.</returns>
         public DocumentCollection CreateCollection()
         {
-            return AsyncTools.RunSync(CreateCollectionAsync;
+            return AsyncTools.RunSync(CreateCollectionAsync);
         }
 
         /// <summary>
@@ -217,15 +217,17 @@ namespace Oogi2
         /// <returns>The collection.</returns>
         public async Task<DocumentCollection> CreateCollectionAsync()
         {
-            var col = Client.CreateDocumentCollectionQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).FirstOrDefault(c => c.Id == CollectionId);
-
-            if (col == null)
+            try
+            {
+                await Client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+            }
+            catch (DocumentClientException)
             {
                 var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId });
                 return response;
             }
 
-            return col;
+            return null;
         }
 
         /// <summary>

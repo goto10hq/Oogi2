@@ -18,13 +18,12 @@ namespace Oogi2.Cmd
                 .Build();
             
             var con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);            
-            var repo = new Repository<dynamic>(con);
-            var start = DateTime.Now;
-            var results = repo.GetList(new DynamicQuery("select top 80000 * from c"));
+            con.CreateCollection();
 
-            System.Console.WriteLine(results.Count);
-            System.Console.WriteLine((DateTime.Now - start).TotalSeconds);
-            System.Console.WriteLine(results.First());
+
+            var repo = new Repository<dynamic>(con);
+
+
             
         }
     }
