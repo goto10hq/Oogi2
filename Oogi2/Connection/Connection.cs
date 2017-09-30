@@ -56,8 +56,6 @@ namespace Oogi2
         {
             var defaultConnectionPolicy = new ConnectionPolicy
                                    {                                       
-                                       ConnectionMode = ConnectionMode.Direct,
-                                       ConnectionProtocol = Protocol.Tcp,
                                        RetryOptions = new RetryOptions
                                        {
                                            MaxRetryAttemptsOnThrottledRequests = 1000,
@@ -65,10 +63,10 @@ namespace Oogi2
                                        }
                                    };
 
-            // direct mode doesn't work on OSX
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            // direct mode works only on Windows
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                defaultConnectionPolicy.ConnectionMode = ConnectionMode.Gateway;
+                defaultConnectionPolicy.ConnectionMode = ConnectionMode.Direct;
                 defaultConnectionPolicy.ConnectionProtocol = Protocol.Tcp;
             }
 
