@@ -6,7 +6,7 @@ using Sushi2;
 
 namespace Oogi2
 {
-    public class CommonRepository
+    public class Repository
     {
         readonly BaseRepository<dynamic> _repository;
 
@@ -14,7 +14,7 @@ namespace Oogi2
         /// Initializes a new instance of the <see cref="T:Oogi2.Repository`1"/> class.
         /// </summary>
         /// <param name="connection">Connection.</param>
-        public CommonRepository(IConnection connection)
+        public Repository(IConnection connection)
         {
             _repository = new BaseRepository<dynamic>(connection);
         }

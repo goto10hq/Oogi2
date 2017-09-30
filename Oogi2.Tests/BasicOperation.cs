@@ -267,7 +267,7 @@ namespace Tests
         [TestMethod]
         public void CreateDynamic()
         {
-            var repo = new CommonRepository(_con);
+            var repo = new Repository(_con);
             repo.Create(new { Movie = "Donkey Kong Jr.", Rating = 3 });
             repo.Create(new { Movie = "King Kong", Rating = 2 });
             repo.Create(new { Movie = "Donkey Kong", Rating = 1 });

@@ -9,8 +9,7 @@
 
 ## TODO
 
-- delete should return boolean (+ modify tests)
-
+- test dynamic objects (CommonRepository) without Id set
 
 ## License
 
