@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Oogi2.Queries;
 using Sushi2;
 
@@ -106,20 +108,27 @@ namespace Oogi2
 
         internal static string GetId(T entity)
         {
-            var ids = new List<string> { "Id", "id", "ID" };
+            var ids = new List<string> { "Id", "id", "ID", "iD" };
 
-            if (entity is IDynamicMetaObjectProvider)
+            if (entity is IDynamicMetaObjectProvider dyn)
             {
-                IDictionary<string, object> propertyValues = (IDictionary<string, object>)entity;
+                var j = JObject.FromObject(entity);
 
-                foreach (var pv in propertyValues)
+                if (j != null)
                 {
                     foreach (var id in ids)
                     {
-                        if (pv.Key.Equals(id))
-                            return pv.Value.ToString();
+                        if (j[id] != null)
+                        {
+                            var jv = j[id].Value<string>();
+
+                            if (jv != null)
+                                return jv;
+                        }
                     }
                 }
+
+                throw new Exception($"Entity {typeof(T)} has got no property named Id/id/ID.");
             }
 
             foreach (var id in ids)

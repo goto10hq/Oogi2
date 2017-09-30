@@ -206,7 +206,7 @@ namespace Oogi2
         /// <param name="entity">Entity.</param>
         public bool Delete(dynamic entity)
         {
-            var response = AsyncTools.RunSync<dynamic>(() => DeleteAsync(BaseRepository<dynamic>.GetId(entity)));
+            var response = AsyncTools.RunSync<bool>(() => DeleteAsync(BaseRepository<dynamic>.GetId(entity)));
             return response;
         }
 
