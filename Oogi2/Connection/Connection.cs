@@ -233,7 +233,16 @@ namespace Oogi2
         /// <summary>
         /// Deletes the collection.
         /// </summary>
-        /// <returns>The collection.</returns>
+        /// <returns><c>true</c> if collection has been deleted; otherwise, <c>false</c>.</returns>
+        public bool DeleteCollection()
+        {
+            return AsyncTools.RunSync(DeleteCollectionAsync);
+        }
+
+        /// <summary>
+        /// Deletes the collection.
+        /// </summary>
+        /// <returns><c>true</c> if collection has been deleted; otherwise, <c>false</c>.</returns>
         public async Task<bool> DeleteCollectionAsync()
         {
             var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));

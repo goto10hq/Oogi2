@@ -1,8 +1,6 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Configuration;
-using Oogi2.Queries;
-using System.Linq;
-using System;
+
 
 namespace Oogi2.Cmd
 {
@@ -19,12 +17,9 @@ namespace Oogi2.Cmd
             
             var con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);            
             con.CreateCollection();
-
+            con.DeleteCollection();
 
             var repo = new Repository<dynamic>(con);
-
-
-            
         }
     }
 }

@@ -5,9 +5,7 @@ using Oogi2.Tokens;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using Oogi2.Attributes;
-using Oogi2.Queries;
 using System.Linq;
-using Microsoft.Azure.Documents;
 
 namespace Tests
 {
@@ -70,6 +68,9 @@ namespace Tests
                 .Build();
 
             _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);
+
+            _con.CreateCollection();
+
             _repo = new Repository<Robot>(_con);
 
             foreach (var robot in _robots.Take(_robots.Count - 1))
@@ -82,12 +83,7 @@ namespace Tests
         [TestCleanup]
         public void DeleteRobots()
         {
-            var robots = _repo.GetAll();
-
-            foreach (var robot in robots)
-            {
-                _repo.Delete(robot);
-            }
+            _con.DeleteCollection();
         }
 
         [TestMethod]
