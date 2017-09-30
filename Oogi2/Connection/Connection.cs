@@ -107,12 +107,7 @@ namespace Oogi2
             return result;
         }
 
-        /// <summary>
-        /// Executes the query async.
-        /// </summary>
-        /// <returns>The query async.</returns>
-        /// <param name="query">Query.</param>
-        public async Task<object> ExecuteQueryAsync(string query)
+        internal async Task<object> ExecuteQueryAsync(string query)
         {
             var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();
             var result = await QueryMoreDocumentsAsync(q);
@@ -120,12 +115,7 @@ namespace Oogi2
             return result;
         }
 
-         /// <summary>
-         /// Executes the query.
-         /// </summary>
-         /// <returns>The query.</returns>
-         /// <param name="query">Query.</param>
-        public object ExecuteQuery(string query)
+        internal object ExecuteQuery(string query)
         {
             var result = AsyncTools.RunSync(() => ExecuteQueryAsync(query));
 
@@ -250,20 +240,14 @@ namespace Oogi2
             return isSuccess;
         }
 
-        /// <summary>
-        /// Deletes the document.
-        /// </summary>
-        /// <returns>Document?</returns>
-        /// <param name="id">Identifier.</param>
-        /// <remarks>TODO: check up return type</remarks>
-        public async Task<object> DeleteAsync(string id)
+        internal async Task<object> DeleteAsync(string id)
         {
             var response = await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
 
             return response;
         }
 
-        static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
+        internal static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
         {
             var entitiesRetrieved = new List<dynamic>();
 
@@ -280,7 +264,7 @@ namespace Oogi2
             return entitiesRetrieved;
         }
 
-        static async Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
+        internal static async Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
         {
             return await query.ExecuteNextAsync<dynamic>();
         }
