@@ -260,7 +260,7 @@ namespace Oogi2
         /// </summary>
         /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public async Task<IList<T>> GetListAsync(string query, object parameters)
+        public async Task<IList<T>> GetListAsync(string query, object parameters = null)
         {
             return await _repository.GetListHelperAsync(new DynamicQuery<T>(query, parameters));
         }
