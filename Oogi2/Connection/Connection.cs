@@ -8,6 +8,7 @@ using Microsoft.Azure.Documents.Client;
 using Sushi2;
 using Microsoft.Azure.Documents.Linq;
 using System.Runtime.InteropServices;
+using System.Net;
 
 namespace Oogi2
 {
@@ -216,8 +217,26 @@ namespace Oogi2
         /// <returns>The collection.</returns>
         public async Task<DocumentCollection> CreateCollectionAsync()
         {
-            var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId });
-            return response;
+            var col = Client.CreateDocumentCollectionQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).FirstOrDefault(c => c.Id == CollectionId);
+
+            if (col == null)
+            {
+                var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId });
+                return response;
+            }
+
+            return col;
+        }
+
+        /// <summary>
+        /// Deletes the collection.
+        /// </summary>
+        /// <returns>The collection.</returns>
+        public async Task<bool> DeleteCollectionAsync()
+        {
+            var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
+            return isSuccess;
         }
 
         /// <summary>
