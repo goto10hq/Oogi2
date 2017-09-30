@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Oogi2
+﻿namespace Oogi2
 {
     public class IRepository
     {
