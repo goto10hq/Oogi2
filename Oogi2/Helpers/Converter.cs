@@ -8,9 +8,9 @@ using Sushi2;
 
 namespace Oogi2
 {
-    internal static class Converter
+    static class Converter
     {        
-        private static readonly Dictionary<Type, Func<object, string>> _processors = new Dictionary<Type, Func<object, string>>
+        static readonly Dictionary<Type, Func<object, string>> _processors = new Dictionary<Type, Func<object, string>>
                                                                      {
                                                                          { typeof(string), StringProcessor },
                                                                          { typeof(char), StringProcessor },
@@ -20,21 +20,21 @@ namespace Oogi2
                                                                          { typeof(SimpleStamp), StampProcessor }
                                                                      };
 
-        private static string StampProcessor(object arg)
+        static string StampProcessor(object arg)
         {
             var stamp = arg as IStamp;
 
             return stamp == null ? "null" : Process(stamp.Epoch);
         }
 
-        private static string ListProcessor(object items)
+        static string ListProcessor(object items)
         {
             var list = items as IEnumerable;
             
             if (list == null)
                 return "(null)";
 
-            var enumerable = list as IList<object> ?? list.Cast<object>().ToList();            
+            var enumerable = list as IList<object> ?? list.Cast<object>().ToList();
             
             var result = new StringBuilder("(");
             
@@ -60,7 +60,7 @@ namespace Oogi2
             return result.ToString();
         }
 
-        public static string Process(object val)
+        internal static string Process(object val)
         {
             if (val == null)
                 return "null";
@@ -74,8 +74,7 @@ namespace Oogi2
                 return _processors[t].Invoke(val);
 
             var isEnumerableOfT = t.GetInterfaces()
-                .Any(ti => ti.IsGenericType
-                     && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                .Any(ti => ti.IsGenericType && ti.GetGenericTypeDefinition() == typeof(IEnumerable<>));
 
             if (isEnumerableOfT)
                 return ListProcessor(val);
@@ -83,24 +82,24 @@ namespace Oogi2
             return UniversalProcessor(val);
         }
 
-        private static string UniversalProcessor(object val)
+        static string UniversalProcessor(object val)
         {
             var formattable = val as IFormattable;
 
             return formattable?.ToString(null, Cultures.English) ?? val.ToString();
         }
         
-        private static string StringProcessor(object val)
+        static string StringProcessor(object val)
         {            
             return "'" + val.ToString().ToEscapedString() + "'";
         }
 
-        private static string BooleanProcessor(object val)
+        static string BooleanProcessor(object val)
         {
             return val.ToString().ToLower();
         }
 
-        private static string EnumProcessor(object val)
+        static string EnumProcessor(object val)
         {
             var underlyingType = Enum.GetUnderlyingType(val.GetType());
             var value = Convert.ChangeType(val, underlyingType);

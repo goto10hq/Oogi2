@@ -9,9 +9,9 @@ using Oogi2.Attributes;
 
 namespace Oogi2
 {
-    public static class Core
-    {        
-        public static ExpandoObject CreateExpandoFromObject<T>(object source)
+    static class Core
+    {
+        internal static ExpandoObject CreateExpandoFromObject<T>(object source)
         {
             var result = new ExpandoObject();
 
@@ -37,10 +37,7 @@ namespace Oogi2
             return result;
         }
 
-        /// <summary>
-        /// Get sql query from dynamic query.
-        /// </summary>        
-        public static string ToSqlQuery(this DynamicQuery dq) 
+        internal static string ToSqlQuery(this DynamicQuery dq)
         {
             if (dq == null)
                 throw new ArgumentNullException(nameof(dq));
@@ -50,23 +47,8 @@ namespace Oogi2
             return ToSqlQuery(sqlqs);
         }
 
-        ///// <summary>
-        ///// Get sql query from dynamic query.
-        ///// </summary>        
-        //public static string ToSqlQuery<T>(this DynamicQuery<T> dq) where T : class
-        //{
-        //    if (dq == null)
-        //        throw new ArgumentNullException(nameof(dq));
 
-        //    var sqlqs = dq.ToSqlQuerySpec();
-
-        //    return ToSqlQuery(sqlqs);
-        //}
-
-        /// <summary>
-        /// Get sql query from sql query spec.
-        /// </summary>        
-        public static string ToSqlQuery(this SqlQuerySpec sqs)
+        internal static string ToSqlQuery(this SqlQuerySpec sqs)
         {
             if (sqs == null)
                 throw new ArgumentNullException(nameof(sqs));
@@ -79,11 +61,11 @@ namespace Oogi2
                 foreach (var p in sqs.Parameters)
                 {
                     var v = Converter.Process(p.Value);
-                    r = r.Replace(p.Name, v);                    
+                    r = r.Replace(p.Name, v);
                 }
             }
 
             return r;
-        }        
+        }
     }
 }
