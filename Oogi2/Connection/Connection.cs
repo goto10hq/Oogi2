@@ -202,6 +202,33 @@ namespace Oogi2
         }
 
         /// <summary>
+        /// Creates the collection.
+        /// </summary>
+        /// <returns>The collection.</returns>
+        /// <param name="id">Identifier.</param>
+        public DocumentCollection CreateCollection(string id)
+        {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+
+            return AsyncTools.RunSync(() => CreateCollectionAsync(id));
+        }
+
+        /// <summary>
+        /// Creates the collection.
+        /// </summary>
+        /// <returns>The collection.</returns>
+        /// <param name="id">Identifier.</param>
+        public async Task<DocumentCollection> CreateCollectionAsync(string id)
+        {
+            if (id == null)
+                throw new ArgumentNullException(nameof(id));
+            
+            var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = id });
+            return response;
+        }
+
+        /// <summary>
         /// Deletes the document.
         /// </summary>
         /// <returns>Document?</returns>
