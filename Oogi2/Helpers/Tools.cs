@@ -8,7 +8,7 @@ namespace Oogi2
     /// <summary>
     /// Tools.
     /// </summary>
-    public static class Tools
+    static class Tools
     {
         /// <summary>
         /// Sets the json default settings.
