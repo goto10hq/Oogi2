@@ -7,18 +7,301 @@ using Microsoft.Azure.Documents.Linq;
 using Oogi2.Queries;
 using Sushi2;
 using System.Dynamic;
+using System.Net;
 
 namespace Oogi2
 {
+    /// <summary>
+    /// Repository.
+    /// </summary>
     public class Repository<T> where T : class
     {
         readonly IConnection _connection;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:Oogi2.Repository`1"/> class.
+        /// </summary>
+        /// <param name="connection">Connection.</param>
         public Repository(IConnection connection)
         {
             _connection = connection;            
         }
-        
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<T> GetFirstOrDefaultAsync(SqlQuerySpec query = null)
+        {
+            return await GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<T>(query));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<T> GetFirstOrDefaultAsync(DynamicQuery query)
+        {
+            return await GetFirstOrDefaultHelperAsync(query);
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<T> GetFirstOrDefaultAsync(string query, object parameters)
+        {
+            return await GetFirstOrDefaultHelperAsync(new DynamicQuery<T>(query, parameters));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="query">Query.</param>
+        public T GetFirstOrDefault(SqlQuerySpec query = null)
+        {
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="query">Query.</param>
+        public T GetFirstOrDefault(DynamicQuery query)
+        {
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="sql">Sql query.</param>
+        /// <param name="parameters">Parameters.</param>
+        public T GetFirstOrDefault(string sql, object parameters)
+        {
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(new DynamicQuery<T>(sql, parameters).ToSqlQuerySpec()));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="id">The id of the document.</param>
+        public async Task<T> GetFirstOrDefaultAsync(string id)
+        {            
+            return await GetFirstOrDefaultHelperAsync(new IdQuery<T>(id));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>
+        /// <returns>The first document.</returns>
+        /// <param name="id">The id of the document.</param>
+        public T GetFirstOrDefault(string id)
+        {
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id));
+        }
+
+        /// <summary>
+        /// Upserts the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public async Task<T> UpsertAsync(T entity)
+        {            
+            var response = await UpsertDocumentAsync(entity);
+            return response;
+        }
+
+        /// <summary>
+        /// Upserts the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public T Upsert(T entity)
+        {
+            var response = AsyncTools.RunSync(() => UpsertAsync(entity));
+            return response;
+        }
+
+        /// <summary>
+        /// Creates the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public async Task<T> CreateAsync(T entity)
+        {            
+            var response = await CreateDocumentAsync(entity);
+            return response;            
+        }
+
+        /// <summary>
+        /// Creates the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public T Create(T entity)
+        {
+            var response = AsyncTools.RunSync(() => CreateAsync(entity));
+            return response;
+        }
+
+        /// <summary>
+        /// Replaces the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public async Task<T> ReplaceAsync(T entity)
+        {            
+            var response = await ReplaceDocumentAsync(entity);
+            return response;
+        }
+
+        /// <summary>
+        /// Replaces the document.
+        /// </summary>
+        /// <returns>The document.</returns>
+        /// <param name="entity">Entity.</param>
+        public T Replace(T entity)
+        {
+            var response = AsyncTools.RunSync(() => ReplaceAsync(entity));
+            return response;
+        }
+
+        /// <summary>
+        /// Delete the specified id.
+        /// </summary>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        /// <param name="id">The id of the document.</param>
+        public async Task<bool> DeleteAsync(string id)
+        {            
+            var response = await DeleteDocumentAsync(id);
+            return response;            
+        }
+
+        /// <summary>
+        /// Delete the specified id.
+        /// </summary>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        /// <param name="id">The id of the document.</param>
+        public bool Delete(string id)
+        {
+            var response = AsyncTools.RunSync(() => DeleteAsync(id));
+            return response;
+        }
+
+        /// <summary>
+        /// Delete the specified id.
+        /// </summary>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        /// <param name="entity">Entity.</param>
+        public async Task<bool> DeleteAsync(T entity)
+        {            
+            var response = await DeleteDocumentAsync(entity);
+            return response;
+        }
+
+        /// <summary>
+        /// Delete the specified id.
+        /// </summary>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        /// <param name="entity">Entity.</param>
+        public bool Delete(T entity)
+        {
+            var response = AsyncTools.RunSync(() => DeleteAsync(GetId(entity)));
+            return response;
+        }
+
+        /// <summary>
+        /// Gets all documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        public async Task<IList<T>> GetAllAsync()
+        {            
+            var query = new SqlQuerySpecQuery<T>();
+            var sq = query.ToGetAll().ToSqlQuery(); 
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+            
+            var response = await QueryMoreDocumentsAsync(q);
+            return response;
+        }
+
+        /// <summary>
+        /// Gets all documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        public IList<T> GetAll()
+        {
+            var response = AsyncTools.RunSync(GetAllAsync);
+            return response;
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<IList<T>> GetListAsync(SqlQuerySpec query)
+        {
+            return await GetListHelperAsync(new SqlQuerySpecQuery<T>(query));
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<IList<T>> GetListAsync(DynamicQuery query)
+        {
+            return await GetListHelperAsync(query);
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public async Task<IList<T>> GetListAsync(string query, object parameters)
+        {
+            return await GetListHelperAsync(new DynamicQuery<T>(query, parameters));
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public IList<T> GetList(SqlQuerySpec query)
+        {
+            return AsyncTools.RunSync(() => GetListAsync(query));
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public IList<T> GetList(DynamicQuery query)
+        {
+            return AsyncTools.RunSync(() => GetListAsync(query));
+        }
+
+        /// <summary>
+        /// Gets the list of documents.
+        /// </summary>
+        /// <returns>The documents.</returns>
+        /// <param name="query">Query.</param>
+        public IList<T> GetList(string query, object parameters)
+        {
+            return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<T>(query, parameters).ToSqlQuerySpec()));
+        }
+
         async Task<T> GetFirstOrDefaultHelperAsync(IQuery query = null)
         {
             SqlQuerySpec sqlq;
@@ -34,276 +317,11 @@ namespace Oogi2
             }
 
             var sq = sqlq.ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();            
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
             var response = await QuerySingleDocumentAsync(q);
             return response.AsEnumerable().FirstOrDefault();
         }
 
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public async Task<T> GetFirstOrDefaultAsync(SqlQuerySpec query = null)
-        {
-            return await GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<T>(query));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        //public async Task<T> GetFirstOrDefaultAsync(DynamicQuery<T> query)
-        //{
-        //    return await GetFirstOrDefaultHelperAsync(query);
-        //}
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public async Task<T> GetFirstOrDefaultAsync(DynamicQuery query)
-        {
-            return await GetFirstOrDefaultHelperAsync(query);
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public async Task<T> GetFirstOrDefaultAsync(string query, object parameters)
-        {
-            return await GetFirstOrDefaultHelperAsync(new DynamicQuery<T>(query, parameters));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public T GetFirstOrDefault(SqlQuerySpec query = null)
-        {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        //public T GetFirstOrDefault(DynamicQuery<T> query)
-        //{
-        //    return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
-        //}
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public T GetFirstOrDefault(DynamicQuery query)
-        {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public T GetFirstOrDefault(string sql, object parameters)
-        {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(new DynamicQuery<T>(sql, parameters).ToSqlQuerySpec()));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public async Task<T> GetFirstOrDefaultAsync(string id)
-        {            
-            return await GetFirstOrDefaultHelperAsync(new IdQuery<T>(id));
-        }
-
-        /// <summary>
-        /// Get first or default.
-        /// </summary>
-        public T GetFirstOrDefault(string id)
-        {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id));
-        }
-
-        /// <summary>
-        /// Upsert entity.
-        /// </summary>
-        public async Task<T> UpsertAsync(T entity)
-        {            
-            var response = await UpsertDocumentAsync(entity);
-            return response;
-        }
-
-        /// <summary>
-        /// Upsert entity.
-        /// </summary>
-        public T Upsert(T entity)
-        {
-            var ret = AsyncTools.RunSync(() => UpsertAsync(entity));
-            return ret;
-        }
-
-        /// <summary>
-        /// Create entity.
-        /// </summary>
-        public async Task<T> CreateAsync(T entity)
-        {            
-            var response = await CreateDocumentAsync(entity);
-            return response;            
-        }
-
-        /// <summary>
-        /// Create entity.
-        /// </summary>
-        public T Create(T entity)
-        {
-            var ret = AsyncTools.RunSync(() => CreateAsync(entity));
-            return ret;
-        }
-
-        /// <summary>
-        /// Replace entity.
-        /// </summary>
-        public async Task<T> ReplaceAsync(T entity)
-        {            
-            var response = await ReplaceDocumentAsync(entity);
-            return response;
-        }
-
-        /// <summary>
-        /// Replace entity.
-        /// </summary>
-        public T Replace(T entity)
-        {
-            var ret = AsyncTools.RunSync(() => ReplaceAsync(entity));
-            return ret;
-        }
-
-        /// <summary>
-        /// Delete entity.
-        /// </summary>
-        public async Task<T> DeleteAsync(string id)
-        {            
-            var response = await DeleteDocumentAsync(id);
-            return response;            
-        }
-
-        /// <summary>
-        /// Delete entity.
-        /// </summary>
-        public T Delete(string id)
-        {
-            var en = AsyncTools.RunSync(() => DeleteAsync(id));
-            return en;
-        }
-
-        /// <summary>
-        /// Delete entity.
-        /// </summary>
-        public async Task<T> DeleteAsync(T entity)
-        {            
-            var response = await DeleteDocumentAsync(entity);
-            return response;
-        }
-
-        /// <summary>
-        /// Delete entity.
-        /// </summary>
-        public T Delete(T entity)
-        {
-            var en = AsyncTools.RunSync(() => DeleteAsync(GetId(entity)));
-            return en;
-        }
-
-		/// <summary>
-        /// Get list of all entities from query.
-        /// </summary>        
-        public async Task<IList<T>> GetAllAsync()
-        {            
-            var query = new SqlQuerySpecQuery<T>();
-		    var sq = query.ToGetAll().ToSqlQuery(); 
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-            
-            var response = await QueryMoreDocumentsAsync(q);
-            return response;
-        }
-
-        /// <summary>
-        /// Get list of all entities from query.
-        /// </summary>        
-        public IList<T> GetAll()
-        {
-            var all = AsyncTools.RunSync(GetAllAsync);
-            return all;
-        }
-
-        async Task<IList<T>> GetListHelperAsync(IQuery query)
-        {
-            var sq = query.ToSqlQuerySpec().ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-            
-            var response = await QueryMoreDocumentsAsync(q);
-            return response;
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public async Task<IList<T>> GetListAsync(SqlQuerySpec query)
-        {
-            return await GetListHelperAsync(new SqlQuerySpecQuery<T>(query));
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        //public async Task<List<T>> GetListAsync(DynamicQuery<T> query)
-        //{
-        //    return await GetListHelperAsync(query);
-        //}
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public async Task<IList<T>> GetListAsync(DynamicQuery query)
-        {
-            return await GetListHelperAsync(query);
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public async Task<IList<T>> GetListAsync(string query, object parameters)
-        {
-            return await GetListHelperAsync(new DynamicQuery<T>(query, parameters));
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public IList<T> GetList(SqlQuerySpec query)
-        {
-            return AsyncTools.RunSync(() => GetListAsync(query));
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        //public List<T> GetList(DynamicQuery<T> query)
-        //{
-        //    return AsyncTools.RunSync(() => GetListAsync(query));
-        //}
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public IList<T> GetList(DynamicQuery query)
-        {
-            return AsyncTools.RunSync(() => GetListAsync(query));
-        }
-
-        /// <summary>
-        /// Get list from query.
-        /// </summary>        
-        public IList<T> GetList(string query, object parameters)
-        {
-            return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<T>(query, parameters).ToSqlQuerySpec()));
-        }       
-                
         static async Task<FeedResponse<T>> QuerySingleDocumentAsync(IDocumentQuery<T> query)
         {
             return await query.ExecuteNextAsync<T>();
@@ -336,18 +354,18 @@ namespace Oogi2
             return ret;
         }
 
-        async Task<T> DeleteDocumentAsync(T entity)
+        async Task<bool> DeleteDocumentAsync(T entity)
         {            
             var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)));
-            var ret = (T)(dynamic)response.Resource;
-            return ret;
+            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
+            return isSuccess;
         }
 
-        async Task<T> DeleteDocumentAsync(string id)
+        async Task<bool> DeleteDocumentAsync(string id)
         {            
             var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id));
-            var ret = (T)(dynamic)response.Resource;
-            return ret;
+            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
+            return isSuccess;
         }
 
         static async Task<List<T>> QueryMoreDocumentsAsync(IDocumentQuery<T> query)
@@ -394,6 +412,15 @@ namespace Oogi2
             }
 
             throw new System.Exception($"Entity {typeof(T)} has got no property named Id/id/ID.");
+        }
+
+        async Task<IList<T>> GetListHelperAsync(IQuery query)
+        {
+            var sq = query.ToSqlQuerySpec().ToSqlQuery();
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+
+            var response = await QueryMoreDocumentsAsync(q);
+            return response;
         }
     }
 }
