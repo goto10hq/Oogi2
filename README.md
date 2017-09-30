@@ -55,11 +55,164 @@ repo.Create(new { Movie = "Donkey Kong", Rating = 1 });
 var games = repo.GetList("select * from c where c.rating = @rating", new { rating = 3 });
 ```
 
-TODO: finish
+In most cases you'd like to use POCOs like that:
+
+```csharp
+const string _entity = "robot";
+
+[EntityType("entity", _entity)]
+public class Robot
+{
+ public string Id { get; set; }            
+ public string Name { get; set; }
+ public int ArtificialIq { get; set; }
+ public Stamp Created { get; set; } = new Stamp();
+ public bool IsOperational { get; set; }
+}
+``` 
+We have a special attribute ``[Entity]`` useful for setting document type property. It's optional of course. If you use this attribute condition is automatically injected in "where" phrase in SQL.
+
+```csharp
+var repo = new Repository<Robot>(connection);
+var robot = repo.GetFirstOrDefault(); // generated sql "select top 1 * from c where c.entity = 'robot'
+var robots = repo.GetList("select * from c where c.entity = @entity and c.artificialIq > @iq",
+new
+{
+    entity = _entity,
+    iq = 120
+});
+```
+
+### Methods
+
+``T GetFirstOrDefault(SqlQuerySpec query)``
+``T GetFirstOrDefault(DynamicQuery query)``
+``GetFirstOrDefault(string sql, object parameters)``
+``T GetFirstOrDefault(string id)``
+
+Get first document found or null. Three types of queries, direct Id of the document or just ``null`` _(in this case EntityType is auto included)_.
+
+``T Upsert(T entity)``
+
+Upsert document.
+
+``T Create(T entity)``
+
+Create document.
+
+``T Replace(T entity)``
+
+Replace document.
+
+``bool Delete(string id)``
+``bool Delete(T entity)``
+
+Delete document.
+
+IList<T> GetAll()
+
+Get all documents _(in this case EntityType is auto included)_.
+
+IList<T> GetList(SqlQuerySpec query)
+IList<T> GetList(DynamicQuery query)
+IList<T> GetList(string query, object parameters = null)
+
+Get list of documents.
+
+## Tokens
+
+Since it's kinda complicated to filter stamps (datetimes) directly through SQL queries. We have two timestamp objects:
+
+### SimpleStamp
+
+``var created = new SimpleStamp(dateTime);``
+
+In JSON:
+
+```json
+"created": {
+ "dateTime": "2017-03-29T15:58:50.8828571+02:00",
+ "epoch": 1490803130
+}
+```
+
+### Stamp
+
+``var created = new Stamp(dateTime);``
+
+In JSON:
+
+```json
+"created": {
+ "dateTime": "2016-09-13T20:06:22.3214018+02:00",
+ "epoch": 1473797182,
+ "year": 2016,
+ "month": 9,
+ "day": 13,
+ "hour": 20,
+ "minute": 6,
+ "second": 22
+}
+```
+
+Stamps are automatically compared by ``epoch``:
+
+```csharp
+var q = new DynamicQuery("select * from c where c.epoch = @stamp or c.epoch2 = @stamp2", 
+new
+{
+    stamp = new Stamp(new DateTime(2000, 1, 1)),
+    stamp2 = new SimpleStamp(new DateTime(2001, 1, 1))
+});
+```
+
+results in:
+
+``select * from c where c.epoch = 946684800 or c.epoch2 = 9466848002``
+            
+## Queries
+
+### DynamicQuery
+
+More conformatable way:
+
+```csharp
+var ids = new List<int> { 4, 5, 2 };
+var q = new DynamicQuery("select * from c where c.items in @ids", new { ids });            
+```
+
+results in:
+
+``select * from c where c.items in (4,5,2)``
+
+### SqlQuerySpec
+
+var q = new SqlQuerySpec
+(
+    "select * from c where c.entity = @entity",
+    new SqlParameterCollection
+    {
+        new SqlParameter("@entity", "robot"),
+    }
+);
+
+results in:
+
+``select * from c where c.entity = 'robot'``
+
+### PureString
+
+Of course.
+
+### Linq
+
+Not at the moment. I don't like it very much. I'm gonna implement it maybe in the future.
 
 ## TODO
 
 - test dynamic objects (CommonRepository) without Id set
+- README.md - add info about stored procedures, ...
+- implement Count() in Repository
 
 ## License
 
