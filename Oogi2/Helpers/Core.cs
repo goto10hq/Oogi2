@@ -37,7 +37,7 @@ namespace Oogi2
             return result;
         }
 
-        internal static string ToSqlQuery(this DynamicQuery dq)
+        public static string ToSqlQuery(this DynamicQuery dq)
         {
             if (dq == null)
                 throw new ArgumentNullException(nameof(dq));
@@ -48,7 +48,7 @@ namespace Oogi2
         }
 
 
-        internal static string ToSqlQuery(this SqlQuerySpec sqs)
+        public static string ToSqlQuery(this SqlQuerySpec sqs)
         {
             if (sqs == null)
                 throw new ArgumentNullException(nameof(sqs));
