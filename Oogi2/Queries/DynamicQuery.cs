@@ -4,7 +4,7 @@ using Sushi2;
 
 namespace Oogi2.Queries
 {
-    internal class DynamicQuery<T> : IQuery where T : class
+    public class DynamicQuery<T> : IQuery where T : class
     {
         readonly object _parameters;
         readonly string _sql;
