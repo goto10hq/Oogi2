@@ -9,7 +9,7 @@ using Oogi2.Attributes;
 
 namespace Oogi2
 {
-    static class Core
+    public static class Core
     {
         internal static ExpandoObject CreateExpandoFromObject<T>(object source)
         {
