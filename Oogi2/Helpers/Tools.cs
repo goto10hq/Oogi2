@@ -2,13 +2,15 @@
 using Microsoft.Azure.Documents;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using Oogi2.Helpers;
+using System.Collections.Generic;
 
 namespace Oogi2
 {
     /// <summary>
     /// Tools.
     /// </summary>
-    static class Tools
+    internal static class Tools
     {
         /// <summary>
         /// Sets the json default settings.
@@ -19,7 +21,8 @@ namespace Oogi2
             {
                 Formatting = Formatting.None,
                 TypeNameHandling = TypeNameHandling.None,
-                ContractResolver = new CamelCasePropertyNamesContractResolver()
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                Converters = new List<JsonConverter> { new JsonClaimConverter() }
             };
         }
 
@@ -43,9 +46,9 @@ namespace Oogi2
         {
             if (parameters == null)
                 return new SqlParameterCollection();
-            
+
             var collection = new SqlParameterCollection();
-            
+
             foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(parameters))
             {
                 object obj2 = descriptor.GetValue(parameters);
@@ -53,6 +56,6 @@ namespace Oogi2
             }
 
             return collection;
-        }        
+        }
     }
 }
