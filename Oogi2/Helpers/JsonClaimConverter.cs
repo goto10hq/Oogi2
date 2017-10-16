@@ -18,11 +18,11 @@ namespace Oogi2.Helpers
 
             JObject jo = new JObject
             {
-                { "Type", claim.Type },
-                { "Value", claim.Value },
-                { "ValueType", claim.ValueType },
-                { "Issuer", claim.Issuer },
-                { "OriginalIssuer", claim.OriginalIssuer }
+                { "type", claim.Type },
+                { "value", claim.Value },
+                { "valueType", claim.ValueType },
+                { "issuer", claim.Issuer },
+                { "originalIssuer", claim.OriginalIssuer }
             };
 
             jo.WriteTo(writer);
@@ -31,12 +31,12 @@ namespace Oogi2.Helpers
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             JObject jo = JObject.Load(reader);
-            string type = (string)jo["Type"];
-            JToken token = jo["Value"];
+            string type = (string)jo["type"];
+            JToken token = jo["value"];
             var value = token.Type == JTokenType.String ? (string)token : token.ToString(Formatting.None);
-            var valueType = (string)jo["ValueType"];
-            var issuer = (string)jo["Issuer"];
-            var originalIssuer = (string)jo["OriginalIssuer"];
+            var valueType = (string)jo["valueType"];
+            var issuer = (string)jo["issuer"];
+            var originalIssuer = (string)jo["originalIssuer"];
 
             return new Claim(type, value, valueType, issuer, originalIssuer);
         }
