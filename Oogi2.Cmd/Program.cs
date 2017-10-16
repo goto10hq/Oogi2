@@ -32,10 +32,9 @@ namespace Oogi2.Cmd
                 .AddUserSecrets("oogi2")
                 .AddEnvironmentVariables()
                 .Build();
-            
-            var _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);            
-            _con.CreateCollection();
 
+            var _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);
+            _con.CreateCollection();
 
             var repo = new Repository(_con);
             repo.Create(new { Movie = "Donkey Kong Jr.", Rating = 3 });
