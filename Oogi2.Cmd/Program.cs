@@ -1,29 +1,14 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Configuration;
 using Oogi2.Attributes;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace Oogi2.Cmd
 {
     class Program
     {
-        const string _entity = "oogi2/robot";
-
-        [EntityType("entity", _entity)]
-        public class Robot
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-
-            public Robot()
-            {
-            }
-
-            public Robot(string name)
-            {
-                Name = name;
-            }
-        }
-
         static void Main(string[] args)
         {
             var appSettings = new ConfigurationBuilder()
@@ -33,34 +18,18 @@ namespace Oogi2.Cmd
                 .AddEnvironmentVariables()
                 .Build();
 
-            var _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"]);
-            _con.CreateCollection();
+            var _con = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], "hub");
 
-            var repo = new Repository(_con);
-            repo.Create(new { Movie = "Donkey Kong Jr.", Rating = 3 });
-            repo.Create(new { Movie = "King Kong", Rating = 2 });
-            repo.Create(new { Movie = "Donkey Kong", Rating = 1 });
+            var content = File.ReadAllText(@"d:\TEMP\db_hub_20171125.json");
+            var documents = JsonConvert.DeserializeObject<List<JObject>>(content);
+            var start = documents.Count;
 
-            var movies = repo.GetList("select * from c where c.rating <> null", null);
-
-            repo.Delete(movies[0]);
-            //var _robots = new List<Robot>
-            //{
-            //new Robot("Alfred"),
-            //new Robot("Nausica"),
-            //    new Robot("Kosuna")
-            //};
-
-            //var _repo = new Repository<Robot>(_con);
-
-            //foreach (var robot in _robots)
-            //    _repo.Create(robot);
-
-            //var _robots2 = _repo.GetList("select * from c", null);
-
-            //_repo.Delete(_robots[0]);
-
-            _con.DeleteCollection();
+            foreach (var d in documents)
+            {
+                _con.UpsertJson("[" + JsonConvert.SerializeObject(d) + "]");
+                start--;
+                System.Console.WriteLine(start);
+            }
         }
     }
 }
