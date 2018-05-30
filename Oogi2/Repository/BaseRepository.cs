@@ -39,20 +39,20 @@ namespace Oogi2
 
             var sq = sqlq.ToSqlQuery();
             var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
-            var response = await QuerySingleDocumentAsync(q);
+            var response = await QuerySingleDocumentAsync(q).ConfigureAwait(false);
             return response.AsEnumerable().FirstOrDefault();
         }
 
         internal static async Task<FeedResponse<T>> QuerySingleDocumentAsync(IDocumentQuery<T> query)
         {
-            return await query.ExecuteNextAsync<T>();
+            return await query.ExecuteNextAsync<T>().ConfigureAwait(false);
         }
 
         internal async Task<T> CreateDocumentAsync(T entity)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando);
+            var response = await _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando).ConfigureAwait(false);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
@@ -61,7 +61,7 @@ namespace Oogi2
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando);
+            var response = await _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando).ConfigureAwait(false);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
@@ -70,21 +70,21 @@ namespace Oogi2
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando);
+            var response = await _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando).ConfigureAwait(false);
             var ret = (T)(dynamic)response.Resource;
             return ret;
         }
 
         internal async Task<bool> DeleteDocumentAsync(T entity)
         {
-            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)));
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity))).ConfigureAwait(false);
             var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
             return isSuccess;
         }
 
         internal async Task<bool> DeleteDocumentAsync(string id)
         {
-            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id));
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id)).ConfigureAwait(false);
             var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
             return isSuccess;
         }
@@ -95,7 +95,7 @@ namespace Oogi2
 
             while (query.HasMoreResults)
             {
-                var queryResponse = await QuerySingleDocumentAsync(query);
+                var queryResponse = await QuerySingleDocumentAsync(query).ConfigureAwait(false);
 
                 var entities = queryResponse.AsEnumerable();
 
@@ -147,7 +147,7 @@ namespace Oogi2
             var sq = query.ToSqlQuerySpec().ToSqlQuery();
             var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
 
-            var response = await QueryMoreDocumentsAsync(q);
+            var response = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
             return response;
         }
     }

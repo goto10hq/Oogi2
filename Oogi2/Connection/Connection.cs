@@ -56,13 +56,13 @@ namespace Oogi2
         public Connection(string endpoint, string authorizationKey, string database, string collection, ConnectionPolicy connectionPolicy = null)
         {
             var defaultConnectionPolicy = new ConnectionPolicy
-                                   {
-                                       RetryOptions = new RetryOptions
-                                       {
-                                           MaxRetryAttemptsOnThrottledRequests = 1000,
-                                           MaxRetryWaitTimeInSeconds = 60
-                                       }
-                                   };
+            {
+                RetryOptions = new RetryOptions
+                {
+                    MaxRetryAttemptsOnThrottledRequests = 1000,
+                    MaxRetryWaitTimeInSeconds = 60
+                }
+            };
 
             // direct mode works only on Windows
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -86,12 +86,12 @@ namespace Oogi2
             return AsyncTools.RunSync(() => UpsertJsonAsync(jsonString));
         }
 
-		/// <summary>
-		/// Upserts the json document(s) directly.
-		/// </summary>
-		/// <returns>Objects.</returns>
-		/// <param name="jsonString">Json string.</param>
-		public async Task<List<object>> UpsertJsonAsync(string jsonString)
+        /// <summary>
+        /// Upserts the json document(s) directly.
+        /// </summary>
+        /// <returns>Objects.</returns>
+        /// <param name="jsonString">Json string.</param>
+        public async Task<List<object>> UpsertJsonAsync(string jsonString)
         {
             if (jsonString == null)
                 throw new ArgumentNullException(nameof(jsonString));
@@ -101,7 +101,7 @@ namespace Oogi2
 
             foreach (var doc in docs)
             {
-                result.Add(await Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc));
+                result.Add(await Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc).ConfigureAwait(false));
             }
 
             return result;
@@ -110,7 +110,7 @@ namespace Oogi2
         internal async Task<object> ExecuteQueryAsync(string query)
         {
             var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();
-            var result = await QueryMoreDocumentsAsync(q);
+            var result = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
 
             return result;
         }
@@ -129,7 +129,7 @@ namespace Oogi2
         /// <param name="storedProcedure">Stored procedure.</param>
         public async Task<StoredProcedure> CreateStoredProcedureAsync(StoredProcedure storedProcedure)
         {
-            StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), storedProcedure);
+            StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), storedProcedure).ConfigureAwait(false);
 
             return createdStoredProcedure;
         }
@@ -141,7 +141,7 @@ namespace Oogi2
         /// <param name="storedProcedureId">Stored procedure identifier.</param>
         public async Task<StoredProcedure> ReadStoredProcedureAsync(string storedProcedureId)
         {
-            StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId));
+            StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)).ConfigureAwait(false);
 
             return storedProcedure;
         }
@@ -165,7 +165,7 @@ namespace Oogi2
         /// <param name="storedProcedureId">Stored procedure identifier.</param>
         public async Task<StoredProcedure> DeleteStoredProcedureAsync(string storedProcedureId)
         {
-            StoredProcedure storedProcedure = await Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId));
+            StoredProcedure storedProcedure = await Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)).ConfigureAwait(false);
 
             return storedProcedure;
         }
@@ -209,11 +209,11 @@ namespace Oogi2
         {
             try
             {
-                await Client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+                await Client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).ConfigureAwait(false);
             }
             catch (DocumentClientException)
             {
-                var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId });
+                var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId }).ConfigureAwait(false);
                 return response;
             }
 
@@ -235,14 +235,14 @@ namespace Oogi2
         /// <returns><c>true</c> if collection has been deleted; otherwise, <c>false</c>.</returns>
         public async Task<bool> DeleteCollectionAsync()
         {
-            var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId));
+            var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).ConfigureAwait(false);
             var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
             return isSuccess;
         }
 
         internal async Task<object> DeleteAsync(string id)
         {
-            var response = await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id));
+            var response = await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)).ConfigureAwait(false);
 
             return response;
         }
@@ -253,7 +253,7 @@ namespace Oogi2
 
             while (query.HasMoreResults)
             {
-                var queryResponse = await QuerySingleDocumentAsync(query);
+                var queryResponse = await QuerySingleDocumentAsync(query).ConfigureAwait(false);
 
                 var entities = queryResponse.AsEnumerable();
 
@@ -266,7 +266,7 @@ namespace Oogi2
 
         internal static async Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
         {
-            return await query.ExecuteNextAsync<dynamic>();
+            return await query.ExecuteNextAsync<dynamic>().ConfigureAwait(false);
         }
     }
 }

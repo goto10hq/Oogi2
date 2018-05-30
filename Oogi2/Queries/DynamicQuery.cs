@@ -8,8 +8,8 @@ namespace Oogi2.Queries
     {
         readonly object _parameters;
         readonly string _sql;
-        readonly string _entityName = typeof(T).GetAttributeValue((EntityType a) => a.Name);
-        readonly string _entityValue = typeof(T).GetAttributeValue((EntityType a) => a.Value);
+        readonly string _entityName = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Name);
+        readonly string _entityValue = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Value);
 
         SqlQuerySpec _sqlQuerySpec;
         SqlQuerySpec SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
@@ -77,11 +77,11 @@ namespace Oogi2.Queries
         }
     }
 
-    public class DynamicQuery: IQuery
+    public class DynamicQuery : IQuery
     {
         readonly object _parameters;
         readonly string _sql;
-        
+
         SqlQuerySpec _sqlQuerySpec;
         SqlQuerySpec SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
 
@@ -120,14 +120,14 @@ namespace Oogi2.Queries
 
         public SqlQuerySpec ToGetFirstOrDefault()
         {
-            if (SqlQuerySpec == null)            
-                return new SqlQuerySpec("select top 1 * from c");                            
+            if (SqlQuerySpec == null)
+                return new SqlQuerySpec("select top 1 * from c");
 
             return SqlQuerySpec;
         }
 
         public SqlQuerySpec ToGetAll()
-        {            
+        {
             return new SqlQuerySpec("select * from c");
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 
 namespace Oogi2.Tokens
 {
@@ -20,10 +21,10 @@ namespace Oogi2.Tokens
         {
             DateTime = dt;
         }
-        
+
         public override string ToString()
         {
-            return DateTime.ToString();
+            return DateTime.ToString(CultureInfo.CurrentCulture);
         }
     }
 }
