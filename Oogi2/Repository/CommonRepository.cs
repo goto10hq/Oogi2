@@ -26,7 +26,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<dynamic> GetFirstOrDefaultAsync(SqlQuerySpec query = null)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<dynamic>(query));
+            return await _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<dynamic>(query)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<dynamic> GetFirstOrDefaultAsync(DynamicQuery query)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(query);
+            return await _repository.GetFirstOrDefaultHelperAsync(query).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<dynamic> GetFirstOrDefaultAsync(string query, object parameters)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new DynamicQuery<dynamic>(query, parameters));
+            return await _repository.GetFirstOrDefaultHelperAsync(new DynamicQuery<dynamic>(query, parameters)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Oogi2
         /// <param name="id">The id of the document.</param>
         public async Task<dynamic> GetFirstOrDefaultAsync(string id)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new IdQuery<dynamic>(id));
+            return await _repository.GetFirstOrDefaultHelperAsync(new IdQuery<dynamic>(id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -173,7 +173,7 @@ namespace Oogi2
         /// <param name="id">The id of the document.</param>
         public async Task<bool> DeleteAsync(string id)
         {
-            var response = await _repository.DeleteDocumentAsync(id);
+            var response = await _repository.DeleteDocumentAsync(id).ConfigureAwait(false);
             return response;
         }
 
@@ -214,12 +214,12 @@ namespace Oogi2
         /// Gets all documents.
         /// </summary>
         /// <returns>The documents.</returns>
-        public async Task<IList<dynamic>> GetAllAsync()
+        private async Task<IList<dynamic>> GetAllAsync()
         {
             var query = new SqlQuerySpecQuery<dynamic>();
             var sq = query.ToGetAll();
 
-            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(sq));
+            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(sq)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<IList<dynamic>> GetListAsync(SqlQuerySpec query)
         {
-            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(query));
+            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(query)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -249,7 +249,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<IList<dynamic>> GetListAsync(DynamicQuery query)
         {
-            return await _repository.GetListHelperAsync(query);
+            return await _repository.GetListHelperAsync(query).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -259,7 +259,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         public async Task<IList<dynamic>> GetListAsync(string query, object parameters)
         {
-            return await _repository.GetListHelperAsync(new DynamicQuery<dynamic>(query, parameters));
+            return await _repository.GetListHelperAsync(new DynamicQuery<dynamic>(query, parameters)).ConfigureAwait(false);
         }
 
         /// <summary>
