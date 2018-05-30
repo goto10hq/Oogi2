@@ -7,21 +7,21 @@ namespace Oogi2.Queries
     public class SqlQuerySpecQuery<T> : IQuery where T : class
     {
         readonly SqlQuerySpec _sqlQuerySpec;
-        readonly string _entityName = typeof(T).GetAttributeValue((EntityType a) => a.Name);
-        readonly string _entityValue = typeof(T).GetAttributeValue((EntityType a) => a.Value);
+        readonly string _entityName = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Name);
+        readonly string _entityValue = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Value);
 
         public SqlQuerySpecQuery(SqlQuerySpec sqlQuerySpec = null)
-        {            
-            _sqlQuerySpec = sqlQuerySpec;            
+        {
+            _sqlQuerySpec = sqlQuerySpec;
         }
-        
+
         public SqlQuerySpec ToSqlQuerySpec()
         {
             return _sqlQuerySpec;
         }
 
         public SqlQuerySpec ToGetFirstOrDefault()
-        {            
+        {
             if (_sqlQuerySpec == null)
             {
                 if (_entityName == null)
@@ -46,7 +46,7 @@ namespace Oogi2.Queries
                 new SqlParameterCollection
                 {
                     new SqlParameter("@entity", _entityValue)
-                });                        
+                });
         }
-    }    
+    }
 }

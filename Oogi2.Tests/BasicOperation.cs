@@ -16,6 +16,7 @@ namespace Tests
     {
         const string _entity = "oogi2/robot";
         static Repository<Robot> _repo;
+        static AggregateRepository _aggregate;
         static Connection _con;
 
         readonly List<Robot> _robots = new List<Robot>
@@ -35,7 +36,7 @@ namespace Tests
         [EntityType("entity", _entity)]
         public class Robot
         {
-            public string Id { get; set; }            
+            public string Id { get; set; }
 
             public string Name { get; set; }
             public int ArtificialIq { get; set; }
@@ -74,6 +75,7 @@ namespace Tests
             _con.CreateCollection();
 
             _repo = new Repository<Robot>(_con);
+            _aggregate = new AggregateRepository(_con);
 
             foreach (var robot in _robots.Take(_robots.Count - 1))
                 _repo.Create(robot);
@@ -90,7 +92,7 @@ namespace Tests
 
         [TestMethod]
         public void SelectAll()
-        {         
+        {
             var robots = _repo.GetAll();
 
             Assert.AreEqual(_robots.Count, robots.Count);
@@ -172,6 +174,49 @@ namespace Tests
         }
 
         [TestMethod]
+        public void AggregateCount()
+        {
+            var q = new SqlQuerySpec("select count(1) from c where c.entity = @entity and c.artificialIq > @iq",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@entity", _entity),
+                    new SqlParameter("@iq", 120)
+                });
+
+            var result = _aggregate.Get(q);
+
+            Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), result);
+        }
+
+        [TestMethod]
+        public void AggregateMax()
+        {
+            var q = new SqlQuerySpec("select max(c.artificialIq) from c where c.entity = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@entity", _entity)
+                });
+
+            var result = _aggregate.Get(q);
+
+            Assert.AreEqual(_robots.Max(x => x.ArtificialIq), result);
+        }
+
+        [TestMethod]
+        public void AggregateInvalid()
+        {
+            var q = new SqlQuerySpec("select min(c.somethingThatDoesntExist) from c where c.entity = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@entity", _entity)
+                });
+
+            var result = _aggregate.Get(q);
+
+            Assert.AreEqual(0, result);
+        }
+
+        [TestMethod]
         public void SelectListDynamic()
         {
             var robots = _repo.GetList("select * from c where c.entity = @entity and c.artificialIq > @iq",
@@ -228,7 +273,6 @@ namespace Tests
                                          new SqlParameter("@message", @"\'\\''")
                                      }
             };
-
 
             var robot = _repo.GetFirstOrDefault(q);
             Assert.AreNotEqual(robot, null);

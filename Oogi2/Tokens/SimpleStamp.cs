@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Globalization;
 using Sushi2;
 
 namespace Oogi2.Tokens
 {
     public class SimpleStamp : IStamp, IFormattable, IComparable<DateTime>, IComparable<IStamp>, IComparable<object>, IEquatable<DateTime>, IEquatable<IStamp>, IEquatable<object>
-    {        
+    {
         public DateTime DateTime { get; set; }
         public int Epoch => DateTime.ToEpoch();
 
@@ -17,11 +18,8 @@ namespace Oogi2.Tokens
         {
             DateTime = dt;
         }
-        
-        public override string ToString()
-        {
-            return DateTime.ToString();
-        }      
+
+        public override string ToString() => DateTime.ToString(CultureInfo.CurrentCulture);
 
         public string ToString(string format, IFormatProvider formatProvider)
         {
@@ -36,7 +34,7 @@ namespace Oogi2.Tokens
         public bool Equals(DateTime other)
         {
             return DateTime.Equals(other);
-        }       
+        }
 
         public bool Equals(IStamp other)
         {

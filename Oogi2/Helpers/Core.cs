@@ -25,8 +25,8 @@ namespace Oogi2
                 dictionary[property.Name] = property.GetValue(source, null);
             }
 
-            var _entityName = typeof(T).GetAttributeValue((EntityType a) => a.Name);
-            var _entityValue = typeof(T).GetAttributeValue((EntityType a) => a.Value);
+            var _entityName = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Name);
+            var _entityValue = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Value);
 
             if (_entityName != null)
             {
@@ -46,7 +46,6 @@ namespace Oogi2
 
             return ToSqlQuery(sqlqs);
         }
-
 
         public static string ToSqlQuery(this SqlQuerySpec sqs)
         {

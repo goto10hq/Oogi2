@@ -6,7 +6,7 @@ namespace Oogi2.Attributes
     /// Entity type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false)]
-    public class EntityType : Attribute
+    public class EntityTypeAttribute : Attribute
     {
         /// <summary>
         /// Gets the name.
@@ -21,20 +21,20 @@ namespace Oogi2.Attributes
         public string Value { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:Oogi2.Attributes.EntityType"/> class.
+        /// Initializes a new instance of the <see cref="T:Oogi2.Attributes.EntityTypeAttribute"/> class.
         /// </summary>
         /// <param name="name">Name.</param>
         /// <param name="value">Value.</param>
-        public EntityType(string name, object @value) : this(name, @value.ToString())
+        public EntityTypeAttribute(string name, object @value) : this(name, @value.ToString())
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:Oogi2.Attributes.EntityType"/> class.
+        /// Initializes a new instance of the <see cref="T:Oogi2.Attributes.EntityTypeAttribute"/> class.
         /// </summary>
         /// <param name="name">Name.</param>
         /// <param name="value">Value.</param>
-        public EntityType(string name, string @value)
+        public EntityTypeAttribute(string name, string @value)
         {
             Name = name;
             Value = @value;

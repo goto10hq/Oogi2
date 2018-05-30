@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Oogi2.Tokens;
@@ -9,7 +10,7 @@ using Sushi2;
 namespace Oogi2
 {
     static class Converter
-    {        
+    {
         static readonly Dictionary<Type, Func<object, string>> _processors = new Dictionary<Type, Func<object, string>>
                                                                      {
                                                                          { typeof(string), StringProcessor },
@@ -30,14 +31,14 @@ namespace Oogi2
         static string ListProcessor(object items)
         {
             var list = items as IEnumerable;
-            
+
             if (list == null)
                 return "(null)";
 
             var enumerable = list as IList<object> ?? list.Cast<object>().ToList();
-            
+
             var result = new StringBuilder("(");
-            
+
             var counter = 0;
             var total = enumerable.Count;
 
@@ -48,7 +49,7 @@ namespace Oogi2
             {
                 counter++;
                 var v = Process(item);
-                
+
                 result.Append(v);
 
                 if (counter < total)
@@ -64,7 +65,7 @@ namespace Oogi2
         {
             if (val == null)
                 return "null";
-            
+
             var t = val.GetType();
 
             if (t.IsEnum)
@@ -88,21 +89,18 @@ namespace Oogi2
 
             return formattable?.ToString(null, Cultures.English) ?? val.ToString();
         }
-        
+
         static string StringProcessor(object val)
-        {            
+        {
             return "'" + val.ToString().ToEscapedString() + "'";
         }
 
-        static string BooleanProcessor(object val)
-        {
-            return val.ToString().ToLower();
-        }
+        static string BooleanProcessor(object val) => val.ToString().ToLower(CultureInfo.CurrentCulture);
 
         static string EnumProcessor(object val)
         {
             var underlyingType = Enum.GetUnderlyingType(val.GetType());
-            var value = Convert.ChangeType(val, underlyingType);
+            var value = Convert.ChangeType(val, underlyingType, CultureInfo.CurrentCulture);
 
             return Process(value);
         }
