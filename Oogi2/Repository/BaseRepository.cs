@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using Microsoft.Azure.Documents.Linq;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Oogi2.Queries;
+using Oogi2.Tokens;
 using Sushi2;
 
 namespace Oogi2
@@ -41,6 +41,28 @@ namespace Oogi2
             var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
             var response = await QuerySingleDocumentAsync(q).ConfigureAwait(false);
             return response.AsEnumerable().FirstOrDefault();
+        }
+
+        internal async Task<AggregateResult> GetAggregateHelperAsync(IQuery query = null)
+        {
+            var sq = query.ToSqlQuerySpec().ToSqlQuery();
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+
+            var response = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
+            var result = new AggregateResult();
+
+            if (response != null)
+            {
+                foreach (var r in response)
+                {
+                    var ar = r as AggregateResult;
+
+                    if (ar != null)
+                        result.Number += ar.Number;
+                }
+            }
+
+            return result;
         }
 
         internal static async Task<FeedResponse<T>> QuerySingleDocumentAsync(IDocumentQuery<T> query)
