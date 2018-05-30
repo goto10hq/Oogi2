@@ -213,7 +213,7 @@ namespace Tests
 
             var result = _aggregate.Get(q);
 
-            Assert.AreEqual(0, result);
+            Assert.IsNull(result);
         }
 
         [TestMethod]

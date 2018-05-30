@@ -58,7 +58,12 @@ namespace Oogi2
                     var ar = r as AggregateResult;
 
                     if (ar != null)
+                    {
+                        if (!result.Number.HasValue)
+                            result.Number = 0;
+
                         result.Number += ar.Number;
+                    }
                 }
             }
 

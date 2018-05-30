@@ -15,7 +15,7 @@ namespace Oogi2
             _repository = new BaseRepository<AggregateResult>(connection);
         }
 
-        public async Task<long> GetAsync(SqlQuerySpec query)
+        public async Task<long?> GetAsync(SqlQuerySpec query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -25,7 +25,7 @@ namespace Oogi2
             return r.Number;
         }
 
-        public async Task<long> GetAsync(DynamicQuery query)
+        public async Task<long?> GetAsync(DynamicQuery query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -35,7 +35,7 @@ namespace Oogi2
             return r.Number;
         }
 
-        public async Task<long> GetAsync(string query, object parameters)
+        public async Task<long?> GetAsync(string query, object parameters)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -45,7 +45,7 @@ namespace Oogi2
             return r.Number;
         }
 
-        public long Get(SqlQuerySpec query)
+        public long? Get(SqlQuerySpec query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -53,7 +53,7 @@ namespace Oogi2
             return AsyncTools.RunSync(() => GetAsync(query));
         }
 
-        public long Get(DynamicQuery query)
+        public long? Get(DynamicQuery query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -61,7 +61,7 @@ namespace Oogi2
             return AsyncTools.RunSync(() => GetAsync(query));
         }
 
-        public long Get(string sql, object parameters)
+        public long? Get(string sql, object parameters)
         {
             if (sql == null)
                 throw new System.ArgumentNullException(nameof(sql));
