@@ -83,11 +83,11 @@ new
 });
 ```
 
-### Methods
+### Methods for repository
 
 ``T GetFirstOrDefault(SqlQuerySpec query)``
 ``T GetFirstOrDefault(DynamicQuery query)``
-``GetFirstOrDefault(string sql, object parameters)``
+``T GetFirstOrDefault(string sql, object parameters)``
 ``T GetFirstOrDefault(string id)``
 
 Get first document found or null. Three types of queries, direct Id of the document or just ``null`` _(in this case EntityType is auto included)_.
@@ -109,15 +109,33 @@ Replace document.
 
 Delete document.
 
-IList<T> GetAll()
+``IList<T> GetAll()``
 
 Get all documents _(in this case EntityType is auto included)_.
 
-IList<T> GetList(SqlQuerySpec query)
-IList<T> GetList(DynamicQuery query)
-IList<T> GetList(string query, object parameters = null)
+``IList<T> GetList(SqlQuerySpec query)``
+``IList<T> GetList(DynamicQuery query)``
+``IList<T> GetList(string query, object parameters = null)``
 
 Get list of documents.
+
+## Aggregate repository
+
+Helper repository for aggregate calls. It automagically handles possibility of partial results.
+
+```csharp
+var agr = new AggregateRepository(connection);
+
+var einstein = repo.GetList("select max(c.iq) from c where c.gender", new { gender = "M" });
+```
+
+### Methods for repository
+
+``long Get(SqlQuerySpec query)``
+``long Get(DynamicQuery query)``
+``long Get(string sql, object parameters)``
+
+Get result of aggregate function.
 
 ## Tokens
 

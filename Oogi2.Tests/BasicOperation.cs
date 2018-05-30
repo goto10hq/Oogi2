@@ -185,7 +185,35 @@ namespace Tests
 
             var result = _aggregate.Get(q);
 
-            Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), result.Number);
+            Assert.AreEqual(_robots.Count(x => x.ArtificialIq > 120), result);
+        }
+
+        [TestMethod]
+        public void AggregateMax()
+        {
+            var q = new SqlQuerySpec("select max(c.artificialIq) from c where c.entity = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@entity", _entity)
+                });
+
+            var result = _aggregate.Get(q);
+
+            Assert.AreEqual(_robots.Max(x => x.ArtificialIq), result);
+        }
+
+        [TestMethod]
+        public void AggregateInvalid()
+        {
+            var q = new SqlQuerySpec("select min(c.somethingThatDoesntExist) from c where c.entity = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@entity", _entity)
+                });
+
+            var result = _aggregate.Get(q);
+
+            Assert.AreEqual(0, result);
         }
 
         [TestMethod]

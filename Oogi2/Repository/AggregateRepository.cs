@@ -15,51 +15,37 @@ namespace Oogi2
             _repository = new BaseRepository<AggregateResult>(connection);
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="query">Query.</param>
-        public async Task<AggregateResult> GetAsync(SqlQuerySpec query)
+        public async Task<long> GetAsync(SqlQuerySpec query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            return await _repository.GetAggregateHelperAsync(new SqlQuerySpecQuery<AggregateResult>(query)).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(new SqlQuerySpecQuery<AggregateResult>(query)).ConfigureAwait(false);
+
+            return r.Number;
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="query">Query.</param>
-        public async Task<AggregateResult> GetAsync(DynamicQuery query)
+        public async Task<long> GetAsync(DynamicQuery query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            return await _repository.GetAggregateHelperAsync(query).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(query).ConfigureAwait(false);
+
+            return r.Number;
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="query">Query.</param>
-        public async Task<AggregateResult> GetAsync(string query, object parameters)
+        public async Task<long> GetAsync(string query, object parameters)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            return await _repository.GetAggregateHelperAsync(new DynamicQuery<AggregateResult>(query, parameters)).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(new DynamicQuery<AggregateResult>(query, parameters)).ConfigureAwait(false);
+
+            return r.Number;
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="query">Query.</param>
-        public AggregateResult Get(SqlQuerySpec query)
+        public long Get(SqlQuerySpec query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -67,12 +53,7 @@ namespace Oogi2
             return AsyncTools.RunSync(() => GetAsync(query));
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="query">Query.</param>
-        public AggregateResult Get(DynamicQuery query)
+        public long Get(DynamicQuery query)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
@@ -80,13 +61,7 @@ namespace Oogi2
             return AsyncTools.RunSync(() => GetAsync(query));
         }
 
-        /// <summary>
-        /// Gets the first or default document.
-        /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="sql">Sql query.</param>
-        /// <param name="parameters">Parameters.</param>
-        public AggregateResult Get(string sql, object parameters)
+        public long Get(string sql, object parameters)
         {
             if (sql == null)
                 throw new System.ArgumentNullException(nameof(sql));

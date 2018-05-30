@@ -2,7 +2,7 @@
 
 namespace Oogi2.Tokens
 {
-    public class AggregateResult
+    internal class AggregateResult
     {
         [JsonProperty("$1")]
         public long Number { get; set; }
