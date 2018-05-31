@@ -225,11 +225,6 @@ Of course.
 
 Not at the moment. I don't like it very much. I'm gonna implement it maybe in the future.
 
-## TODO
-
-- test dynamic objects (CommonRepository) without Id set
-- README.md - add info about stored procedures, ...
-
 ## License
 
 MIT © [frohikey](http://frohikey.com) / [Goto10 s.r.o.](http://www.goto10.cz)

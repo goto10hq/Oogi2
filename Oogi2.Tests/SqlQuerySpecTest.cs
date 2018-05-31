@@ -9,11 +9,11 @@ namespace Tests
 {
     [TestClass]
     public class SqlQuerySpecTest
-    {        
+    {
         [TestMethod]
         public void Classic()
         {
-            var q = new SqlQuerySpec("a = @a, b = @b, c = @c, d = @d, e = @e, f = @f",
+            var q = new SqlQuerySpec("a = @a, b = @b, c = @c, d = @d, e = @e, f = @f, g = @g",
                 new SqlParameterCollection
                 {
                     new SqlParameter("@a", "!''!"),
@@ -21,12 +21,13 @@ namespace Tests
                     new SqlParameter("@c", null),
                     new SqlParameter("@d", true),
                     new SqlParameter("@e", 13),
-                    new SqlParameter("@f", 13.99)
+                    new SqlParameter("@f", 13.99),
+                    new SqlParameter("@g", Guid.Empty)
                 });
 
             var sql = q.ToSqlQuery();
-            
-            Assert.AreEqual("a = '!\\'\\'!', b = 'x', c = null, d = true, e = 13, f = 13.99", sql);            
+
+            Assert.AreEqual("a = '!\\'\\'!', b = 'x', c = null, d = true, e = 13, f = 13.99, g = '00000000-0000-0000-0000-000000000000'", sql);
         }
 
         public enum State
@@ -42,7 +43,7 @@ namespace Tests
             var q = new SqlQuerySpec("state = @state",
                 new SqlParameterCollection
                 {
-                    new SqlParameter("@state", State.Processing),                    
+                    new SqlParameter("@state", State.Processing),
                 });
 
             var sql = q.ToSqlQuery();
@@ -143,6 +144,26 @@ namespace Tests
             var sql = q.ToSqlQuery();
 
             Assert.AreEqual("items in (null)", sql);
+        }
+
+        [TestMethod]
+        public void Nulls()
+        {
+            string a = null;
+            float? b = null;
+            Guid? c = null;
+
+            var q = new SqlQuerySpec("a = @a, b = @b, c = @c",
+               new SqlParameterCollection
+               {
+                    new SqlParameter("@a", a),
+                    new SqlParameter("@b", b),
+                    new SqlParameter("@c", c)
+               });
+
+            var sql = q.ToSqlQuery();
+
+            Assert.AreEqual("a = null, b = null, c = null", sql);
         }
     }
 }

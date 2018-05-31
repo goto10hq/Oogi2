@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using Oogi2.Tokens;
@@ -18,21 +17,19 @@ namespace Oogi2
                                                                          { typeof(bool), BooleanProcessor },
                                                                          { typeof(bool?), BooleanProcessor },
                                                                          { typeof(Stamp), StampProcessor },
-                                                                         { typeof(SimpleStamp), StampProcessor }
+                                                                         { typeof(SimpleStamp), StampProcessor },
+                                                                         { typeof(Guid), GuidProcessor },
+                                                                         { typeof(Guid?), GuidProcessor }
                                                                      };
 
         static string StampProcessor(object arg)
         {
-            var stamp = arg as IStamp;
-
-            return stamp == null ? "null" : Process(stamp.Epoch);
+            return !(arg is IStamp stamp) ? "null" : Process(stamp.Epoch);
         }
 
         static string ListProcessor(object items)
         {
-            var list = items as IEnumerable;
-
-            if (list == null)
+            if (!(items is IEnumerable list))
                 return "(null)";
 
             var enumerable = list as IList<object> ?? list.Cast<object>().ToList();
@@ -90,17 +87,16 @@ namespace Oogi2
             return formattable?.ToString(null, Cultures.English) ?? val.ToString();
         }
 
-        static string StringProcessor(object val)
-        {
-            return "'" + val.ToString().ToEscapedString() + "'";
-        }
+        static string StringProcessor(object val) => $"'{val.ToString().ToEscapedString()}'";
 
-        static string BooleanProcessor(object val) => val.ToString().ToLower(CultureInfo.CurrentCulture);
+        static string GuidProcessor(object val) => $"'{val}'";
+
+        static string BooleanProcessor(object val) => val.ToString().ToLower(Cultures.English);
 
         static string EnumProcessor(object val)
         {
             var underlyingType = Enum.GetUnderlyingType(val.GetType());
-            var value = Convert.ChangeType(val, underlyingType, CultureInfo.CurrentCulture);
+            var value = Convert.ChangeType(val, underlyingType, Cultures.English);
 
             return Process(value);
         }
