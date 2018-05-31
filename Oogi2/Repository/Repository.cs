@@ -152,7 +152,7 @@ namespace Oogi2
         /// </summary>
         /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        private async Task<T> ReplaceAsync(T entity)
+        public async Task<T> ReplaceAsync(T entity)
         {
             var response = await _repository.ReplaceDocumentAsync(entity).ConfigureAwait(false);
             return response;
