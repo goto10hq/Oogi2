@@ -18,8 +18,9 @@ namespace Oogi2
                                                                          { typeof(bool?), BooleanProcessor },
                                                                          { typeof(Stamp), StampProcessor },
                                                                          { typeof(SimpleStamp), StampProcessor },
-                                                                         { typeof(Guid), GuidProcessor },
-                                                                         { typeof(Guid?), GuidProcessor }
+                                                                         { typeof(Guid), StringProcessor },
+                                                                         { typeof(Guid?), StringProcessor },
+                                                                         { typeof(Uri), StringProcessor },
                                                                      };
 
         static string StampProcessor(object arg)
@@ -88,8 +89,6 @@ namespace Oogi2
         }
 
         static string StringProcessor(object val) => $"'{val.ToString().ToEscapedString()}'";
-
-        static string GuidProcessor(object val) => $"'{val}'";
 
         static string BooleanProcessor(object val) => val.ToString().ToLower(Cultures.English);
 
