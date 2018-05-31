@@ -125,17 +125,16 @@ Helper repository for aggregate calls. It automagically handles possibility of p
 
 ```csharp
 var agr = new AggregateRepository(connection);
-
 var einstein = repo.GetList("select max(c.iq) from c where c.gender", new { gender = "M" });
 ```
 
-### Methods for repository
+### Methods for aggregate repository
 
-``long Get(SqlQuerySpec query)``
-``long Get(DynamicQuery query)``
-``long Get(string sql, object parameters)``
+``long? Get(SqlQuerySpec query)``
+``long? Get(DynamicQuery query)``
+``long? Get(string sql, object parameters)``
 
-Get result of aggregate function.
+Get a numeric result of aggregate function.
 
 ## Tokens
 
@@ -230,7 +229,6 @@ Not at the moment. I don't like it very much. I'm gonna implement it maybe in th
 
 - test dynamic objects (CommonRepository) without Id set
 - README.md - add info about stored procedures, ...
-- implement Count() in Repository
 
 ## License
 
