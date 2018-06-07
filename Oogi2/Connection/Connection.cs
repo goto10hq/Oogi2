@@ -71,7 +71,14 @@ namespace Oogi2
                 defaultConnectionPolicy.ConnectionProtocol = Protocol.Tcp;
             }
 
-            Client = new DocumentClient(new Uri(endpoint), authorizationKey, connectionPolicy ?? defaultConnectionPolicy);
+            Client = new DocumentClient
+                (
+                new Uri(endpoint),
+                authorizationKey,
+                Tools.DefaultJsonSerializerSettings ?? new JsonSerializerSettings(),
+                connectionPolicy ?? defaultConnectionPolicy
+                );
+
             DatabaseId = database;
             CollectionId = collection;
         }

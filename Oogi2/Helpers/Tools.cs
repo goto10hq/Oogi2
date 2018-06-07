@@ -10,20 +10,28 @@ namespace Oogi2
     /// <summary>
     /// Tools.
     /// </summary>
-    internal static class Tools
+    public static class Tools
     {
+        internal static JsonSerializerSettings DefaultJsonSerializerSettings
+        {
+            get
+            {
+                return new JsonSerializerSettings
+                {
+                    Formatting = Formatting.None,
+                    TypeNameHandling = TypeNameHandling.None,
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    Converters = new List<JsonConverter> { new JsonClaimConverter() }
+                };
+            }
+        }
+
         /// <summary>
         /// Sets the json default settings.
         /// </summary>
-        internal static void SetJsonDefaultSettings()
+        public static void SetJsonDefaultSettings()
         {
-            JsonConvert.DefaultSettings = () => new JsonSerializerSettings
-            {
-                Formatting = Formatting.None,
-                TypeNameHandling = TypeNameHandling.None,
-                ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                Converters = new List<JsonConverter> { new JsonClaimConverter() }
-            };
+            JsonConvert.DefaultSettings = () => DefaultJsonSerializerSettings;
         }
 
         /// <summary>
