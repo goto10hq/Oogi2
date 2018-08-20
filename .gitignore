@@ -17,3 +17,4 @@ Oogi2.Cmd/obj/
 /Oogi2.Tests/bin/Release/netcoreapp2.0
 /Oogi2/bin/Release/netstandard2.0
 /.vs/Oogi2/DesignTimeBuild/.dtbcache
+/Oogi2.Tests/bin/Debug/netcoreapp2.1

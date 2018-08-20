@@ -53,7 +53,7 @@ namespace Oogi2.Tokens
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
+            if (obj == null)
                 return false;
 
             if (ReferenceEquals(this, obj))

@@ -8,6 +8,7 @@ using Oogi2.Queries;
 using Microsoft.Azure.Documents;
 using Oogi2.Tests.Helpers;
 using static Oogi2.Tests.Helpers.Enums;
+using System;
 
 namespace Tests
 {
@@ -52,6 +53,9 @@ namespace Tests
         [TestCleanup]
         public void DeleteRobots()
         {
+            if (_con.CollectionId.Equals("hub", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Hub cannot be deleted.");
+
             _con.DeleteCollection();
         }
 
