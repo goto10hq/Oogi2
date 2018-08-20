@@ -1,20 +1,19 @@
 ﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Oogi2;
-using Oogi2.Tokens;
 using Microsoft.Extensions.Configuration;
 using System.IO;
-using Oogi2.Attributes;
 using System.Linq;
 using Oogi2.Queries;
 using Microsoft.Azure.Documents;
+using Oogi2.Tests.Helpers;
+using static Oogi2.Tests.Helpers.Enums;
 
 namespace Tests
 {
     [TestClass]
     public class BasicOperation
     {
-        const string _entity = "oogi2/robot";
         static Repository<Robot> _repo;
         static AggregateRepository _aggregate;
         static Connection _con;
@@ -25,40 +24,6 @@ namespace Tests
             new Robot("Nausica", 220, true, new List<string> { "CPU", "Bio scanner", "DSP" }, State.Sleeping),
             new Robot("Kosuna", 190, false, new List<string>(), State.Ready) { Message = @"\'\\''" }
             };
-
-        public enum State
-        {
-            Ready = 10,
-            Sleeping = 20,
-            Destroyed = 30
-        }
-
-        [EntityType("entity", _entity)]
-        public class Robot
-        {
-            public string Id { get; set; }
-
-            public string Name { get; set; }
-            public int ArtificialIq { get; set; }
-            public Stamp Created { get; set; } = new Stamp();
-            public bool IsOperational { get; set; }
-            public IEnumerable<string> Parts { get; set; } = new List<string>();
-            public string Message { get; set; }
-            public State State { get; set; }
-
-            public Robot()
-            {
-            }
-
-            public Robot(string name, int artificialIq, bool isOperational, List<string> parts, State state)
-            {
-                Name = name;
-                ArtificialIq = artificialIq;
-                IsOperational = isOperational;
-                Parts = parts;
-                State = state;
-            }
-        }
 
         [TestInitialize]
         public void CreateRobots()
@@ -104,7 +69,7 @@ namespace Tests
             var q = new DynamicQuery("select * from c where c.entity = @entity and c.state = @state",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     state = State.Destroyed
                 });
 
@@ -119,7 +84,7 @@ namespace Tests
             var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     states = new List<State> { State.Ready, State.Sleeping }
                 });
 
@@ -134,7 +99,7 @@ namespace Tests
             var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     states = new List<State> { State.Destroyed, State.Sleeping }
                 });
 
@@ -149,7 +114,7 @@ namespace Tests
             var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     states = new List<State> { State.Destroyed, State.Destroyed, State.Destroyed }
                 });
 
@@ -164,7 +129,7 @@ namespace Tests
             var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.artificialIq > @iq",
                 new SqlParameterCollection
                 {
-                    new SqlParameter("@entity", _entity),
+                    new SqlParameter("@entity", Robot.Entity),
                     new SqlParameter("@iq", 120)
                 });
 
@@ -179,7 +144,7 @@ namespace Tests
             var q = new SqlQuerySpec("select count(1) from c where c.entity = @entity and c.artificialIq > @iq",
                 new SqlParameterCollection
                 {
-                    new SqlParameter("@entity", _entity),
+                    new SqlParameter("@entity", Robot.Entity),
                     new SqlParameter("@iq", 120)
                 });
 
@@ -194,7 +159,7 @@ namespace Tests
             var q = new SqlQuerySpec("select max(c.artificialIq) from c where c.entity = @entity",
                 new SqlParameterCollection
                 {
-                    new SqlParameter("@entity", _entity)
+                    new SqlParameter("@entity", Robot.Entity)
                 });
 
             var result = _aggregate.Get(q);
@@ -208,7 +173,7 @@ namespace Tests
             var q = new SqlQuerySpec("select min(c.somethingThatDoesntExist) from c where c.entity = @entity",
                 new SqlParameterCollection
                 {
-                    new SqlParameter("@entity", _entity)
+                    new SqlParameter("@entity", Robot.Entity)
                 });
 
             var result = _aggregate.Get(q);
@@ -222,7 +187,7 @@ namespace Tests
             var robots = _repo.GetList("select * from c where c.entity = @entity and c.artificialIq > @iq",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     iq = 120
                 });
 
@@ -241,7 +206,7 @@ namespace Tests
             {
                 Parameters = new SqlParameterCollection
                                      {
-                                         new SqlParameter("@entity", _entity),
+                                         new SqlParameter("@entity", Robot.Entity),
                                          new SqlParameter("@iq", 190)
                                      }
             };
@@ -254,7 +219,7 @@ namespace Tests
             robot = _repo.GetFirstOrDefault("select * from c where c.entity = @entity and c.artificialIq = @iq",
                 new
                 {
-                    entity = _entity,
+                    entity = Robot.Entity,
                     iq = 190
                 });
 
@@ -269,7 +234,7 @@ namespace Tests
             {
                 Parameters = new SqlParameterCollection
                                      {
-                                         new SqlParameter("@entity", _entity),
+                                         new SqlParameter("@entity", Robot.Entity),
                                          new SqlParameter("@message", @"\'\\''")
                                      }
             };
@@ -290,7 +255,7 @@ namespace Tests
         [TestMethod]
         public void Delete()
         {
-            var robots = _repo.GetList("select * from c where c.entity = @entity order by c.artificialIq", new { entity = _entity });
+            var robots = _repo.GetList("select * from c where c.entity = @entity order by c.artificialIq", new { entity = Robot.Entity });
 
             Assert.AreEqual(_robots.Count, robots.Count);
 
@@ -318,13 +283,13 @@ namespace Tests
 
             var movies = repo.GetList("select * from c where c.rating <> null", null);
 
-            Assert.AreEqual(3, movies.Count());
+            Assert.AreEqual(3, movies.Count);
 
             repo.Delete(movies[0]);
 
             movies = repo.GetList("select * from c where c.rating <> null", null);
 
-            Assert.AreEqual(2, movies.Count());
+            Assert.AreEqual(2, movies.Count);
         }
     }
 }

@@ -120,10 +120,7 @@ namespace Oogi2.Queries
 
         public SqlQuerySpec ToGetFirstOrDefault()
         {
-            if (SqlQuerySpec == null)
-                return new SqlQuerySpec("select top 1 * from c");
-
-            return SqlQuerySpec;
+            return SqlQuerySpec ?? new SqlQuerySpec("select top 1 * from c");
         }
 
         public SqlQuerySpec ToGetAll()
