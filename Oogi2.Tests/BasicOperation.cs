@@ -42,7 +42,7 @@ namespace Tests
             public int ArtificialIq { get; set; }
             public Stamp Created { get; set; } = new Stamp();
             public bool IsOperational { get; set; }
-            public List<string> Parts { get; set; } = new List<string>();
+            public IEnumerable<string> Parts { get; set; } = new List<string>();
             public string Message { get; set; }
             public State State { get; set; }
 
