@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -16,6 +16,7 @@
     <Company>Goto10</Company>
     <RepositoryUrl>https://github.com/goto10hq/Oogi2</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/goto10hq/Oogi2/master/oogi2-icon.png</PackageIconUrl>
+    <CodeAnalysisRuleSet>../Rulez.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>

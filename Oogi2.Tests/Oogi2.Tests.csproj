@@ -4,6 +4,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <UserSecretsId>oogi2</UserSecretsId>
     <IsPackable>false</IsPackable>
+    <CodeAnalysisRuleSet>../Rulez.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
 
   <ItemGroup>
