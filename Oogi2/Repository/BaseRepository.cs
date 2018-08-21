@@ -23,7 +23,7 @@ namespace Oogi2
             _connection = connection;
         }
 
-        internal async Task<T> GetFirstOrDefaultHelperAsync(IQuery query = null)
+        internal async Task<T> GetFirstOrDefaultHelperAsync(IQuery query = null, FeedOptions feedOptions = null)
         {
             SqlQuerySpec sqlq;
 
@@ -38,15 +38,15 @@ namespace Oogi2
             }
 
             var sq = sqlq.ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq, feedOptions).AsDocumentQuery();
             var response = await QuerySingleDocumentAsync(q).ConfigureAwait(false);
             return response.AsEnumerable().FirstOrDefault();
         }
 
-        internal async Task<AggregateResult> GetAggregateHelperAsync(IQuery query = null)
+        internal async Task<AggregateResult> GetAggregateHelperAsync(IQuery query = null, FeedOptions feedOptions = null)
         {
             var sq = query.ToSqlQuerySpec().ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq, feedOptions).AsDocumentQuery();
 
             var response = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
             var result = new AggregateResult();
@@ -70,50 +70,45 @@ namespace Oogi2
             return result;
         }
 
-        internal static async Task<FeedResponse<T>> QuerySingleDocumentAsync(IDocumentQuery<T> query)
+        internal static Task<FeedResponse<T>> QuerySingleDocumentAsync(IDocumentQuery<T> query)
         {
-            return await query.ExecuteNextAsync<T>().ConfigureAwait(false);
+            return query.ExecuteNextAsync<T>();
         }
 
-        internal async Task<T> CreateDocumentAsync(T entity)
+        internal async Task<T> CreateDocumentAsync(T entity, RequestOptions requestOptions)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando).ConfigureAwait(false);
-            var ret = (T)(dynamic)response.Resource;
-            return ret;
+            var response = await _connection.Client.CreateDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando, requestOptions).ConfigureAwait(false);
+            return (T)(dynamic)response.Resource;
         }
 
-        internal async Task<T> ReplaceDocumentAsync(T entity)
+        internal async Task<T> ReplaceDocumentAsync(T entity, RequestOptions requestOptions)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando).ConfigureAwait(false);
-            var ret = (T)(dynamic)response.Resource;
-            return ret;
+            var response = await _connection.Client.ReplaceDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), expando, requestOptions).ConfigureAwait(false);
+            return (T)(dynamic)response.Resource;
         }
 
-        internal async Task<T> UpsertDocumentAsync(T entity)
+        internal async Task<T> UpsertDocumentAsync(T entity, RequestOptions requestOptions)
         {
             var expando = Core.CreateExpandoFromObject<T>(entity);
 
-            var response = await _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando).ConfigureAwait(false);
-            var ret = (T)(dynamic)response.Resource;
-            return ret;
+            var response = await _connection.Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), expando, requestOptions).ConfigureAwait(false);
+            return (T)(dynamic)response.Resource;
         }
 
-        internal async Task<bool> DeleteDocumentAsync(T entity)
+        internal async Task<bool> DeleteDocumentAsync(T entity, RequestOptions requestOptions)
         {
-            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity))).ConfigureAwait(false);
-            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
-            return isSuccess;
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, GetId(entity)), requestOptions).ConfigureAwait(false);
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
 
-        internal async Task<bool> DeleteDocumentAsync(string id)
+        internal async Task<bool> DeleteDocumentAsync(string id, RequestOptions requestOptions)
         {
-            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id)).ConfigureAwait(false);
-            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
-            return isSuccess;
+            var response = await _connection.Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(_connection.DatabaseId, _connection.CollectionId, id), requestOptions).ConfigureAwait(false);
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
 
         internal static async Task<IList<T>> QueryMoreDocumentsAsync(IDocumentQuery<T> query)
@@ -155,7 +150,7 @@ namespace Oogi2
                     }
                 }
 
-                throw new Exception($"Entity {typeof(T)} has got no property named Id/id/ID.");
+                throw new Exception($"Entity {typeof(T)} has got no property named Id/id/ID/iD.");
             }
 
             foreach (var id in ids)
@@ -166,16 +161,15 @@ namespace Oogi2
                     return v;
             }
 
-            throw new Exception($"Entity {typeof(T)} has got no property named Id/id/ID.");
+            throw new Exception($"Entity {typeof(T)} has got no property named Id/id/ID/iD.");
         }
 
-        internal async Task<IList<T>> GetListHelperAsync(IQuery query)
+        internal Task<IList<T>> GetListHelperAsync(IQuery query, FeedOptions feedOptions)
         {
             var sq = query.ToSqlQuerySpec().ToSqlQuery();
-            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq).AsDocumentQuery();
+            var q = _connection.Client.CreateDocumentQuery<T>(UriFactory.CreateDocumentCollectionUri(_connection.DatabaseId, _connection.CollectionId), sq, feedOptions).AsDocumentQuery();
 
-            var response = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
-            return response;
+            return QueryMoreDocumentsAsync(q);
         }
     }
 }
