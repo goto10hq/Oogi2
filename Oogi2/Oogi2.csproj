@@ -4,15 +4,15 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Oogi2</PackageId>
     <Title>Oogi2</Title>
-    <Version>1.3.4</Version>
+    <Version>1.4.0</Version>
     <Authors>frohikey</Authors>
     <PackageLicenseUrl>https://github.com/goto10hq/Oogi2/blob/master/LICENSE</PackageLicenseUrl>
     <Owners>Goto10</Owners>
     <PackageProjectUrl>https://github.com/goto10hq/Oogi2</PackageProjectUrl>
     <Summary>Repository pattern for DocumentDB.</Summary>
-    <Description>Repository pattern for DocumentDB.</Description>
-    <PackageTags>documentdb repository</PackageTags>
-    <Copyright>Copyright (c) 2017 Goto10 s.r.o.</Copyright>
+    <Description>Repository pattern for Cosmos/DocumentDB.</Description>
+    <PackageTags>cosmosdb documentdb repository</PackageTags>
+    <Copyright>Copyright (c) 2018 Goto10 s.r.o.</Copyright>
     <Company>Goto10</Company>
     <RepositoryUrl>https://github.com/goto10hq/Oogi2</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/goto10hq/Oogi2/master/oogi2-icon.png</PackageIconUrl>
