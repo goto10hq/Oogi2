@@ -129,6 +129,7 @@ namespace Oogi2
         /// Upserts the document.
         /// </summary>
         /// <param name="entity">Entity.</param>
+        /// <param name="requestOptions">Request options.</param>
         /// <returns>The document.</returns>
         public T Upsert(T entity, RequestOptions requestOptions = null)
         {
@@ -297,7 +298,7 @@ namespace Oogi2
         /// <param name="query">Query.</param>
         /// <param name="feedOptions">Feed options.</param>
         /// <returns>The documents.</returns>
-        public IList<T> GetList(DynamicQuery query, FeedOptions feedOptions)
+        public IList<T> GetList(DynamicQuery query, FeedOptions feedOptions = null)
         {
             return AsyncTools.RunSync(() => GetListAsync(query, feedOptions));
         }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Oogi2.Queries;
 using Sushi2;
 
@@ -11,7 +12,7 @@ namespace Oogi2
         readonly BaseRepository<dynamic> _repository;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="T:Oogi2.Repository`1"/> class.
+        /// Ctor.
         /// </summary>
         /// <param name="connection">Connection.</param>
         public Repository(IConnection connection)
@@ -22,274 +23,292 @@ namespace Oogi2
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="query">Query.</param>
-        public async Task<dynamic> GetFirstOrDefaultAsync(SqlQuerySpec query = null)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public Task<dynamic> GetFirstOrDefaultAsync(SqlQuerySpec query = null, FeedOptions feedOptions = null)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<dynamic>(query)).ConfigureAwait(false);
+            return _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<dynamic>(query), feedOptions);
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="query">Query.</param>
-        public async Task<dynamic> GetFirstOrDefaultAsync(DynamicQuery query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public Task<dynamic> GetFirstOrDefaultAsync(DynamicQuery query, FeedOptions feedOptions = null)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(query).ConfigureAwait(false);
+            return _repository.GetFirstOrDefaultHelperAsync(query, feedOptions);
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="query">Query.</param>
-        public async Task<dynamic> GetFirstOrDefaultAsync(string query, object parameters)
+        /// <param name="parameters">Sql parameters.</param>
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public Task<dynamic> GetFirstOrDefaultAsync(string query, object parameters, FeedOptions feedOptions = null)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new DynamicQuery<dynamic>(query, parameters)).ConfigureAwait(false);
+            return _repository.GetFirstOrDefaultHelperAsync(new DynamicQuery<dynamic>(query, parameters), feedOptions);
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="query">Query.</param>
-        public dynamic GetFirstOrDefault(SqlQuerySpec query = null)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public dynamic GetFirstOrDefault(SqlQuerySpec query = null, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query, feedOptions));
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="query">Query.</param>
-        public dynamic GetFirstOrDefault(DynamicQuery query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public dynamic GetFirstOrDefault(DynamicQuery query, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query));
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(query, feedOptions));
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
-        /// <param name="sql">Sql query.</param>
-        /// <param name="parameters">Parameters.</param>
-        public dynamic GetFirstOrDefault(string sql, object parameters)
+        /// <param name="sql">Query.</param>
+        /// <param name="parameters">Sql parameters.</param>
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public dynamic GetFirstOrDefault(string sql, object parameters, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(new DynamicQuery<dynamic>(sql, parameters).ToSqlQuerySpec()));
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(new DynamicQuery<dynamic>(sql, parameters).ToSqlQuerySpec(), feedOptions));
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="id">The id of the document.</param>
-        public async Task<dynamic> GetFirstOrDefaultAsync(string id)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public Task<dynamic> GetFirstOrDefaultAsync(string id, FeedOptions feedOptions = null)
         {
-            return await _repository.GetFirstOrDefaultHelperAsync(new IdQuery<dynamic>(id)).ConfigureAwait(false);
+            return _repository.GetFirstOrDefaultHelperAsync(new IdQuery<dynamic>(id), feedOptions);
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
-        /// <returns>The first document.</returns>
         /// <param name="id">The id of the document.</param>
-        public dynamic GetFirstOrDefault(string id)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The first document or null.</returns>
+        public dynamic GetFirstOrDefault(string id, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id));
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id, feedOptions));
         }
 
         /// <summary>
         /// Upserts the document.
         /// </summary>
-        /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        public async Task<dynamic> UpsertAsync(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns>The document.</returns>
+        public async Task<dynamic> UpsertAsync(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = await _repository.UpsertDocumentAsync(entity);
-            return response;
+            return (dynamic)await _repository.UpsertDocumentAsync(entity, requestOptions).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Upserts the document.
         /// </summary>
-        /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        public dynamic Upsert(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns>The document.</returns>
+        public dynamic Upsert(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = AsyncTools.RunSync<dynamic>(() => UpsertAsync(entity));
-            return response;
+            return (dynamic)AsyncTools.RunSync<dynamic>(() => UpsertAsync(entity, requestOptions));
         }
 
         /// <summary>
         /// Creates the document.
         /// </summary>
-        /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        public async Task<dynamic> CreateAsync(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns>The document.</returns>
+        public async Task<dynamic> CreateAsync(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = await _repository.CreateDocumentAsync(entity);
-            return response;
+            return (dynamic)await _repository.CreateDocumentAsync(entity, requestOptions).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Creates the document.
         /// </summary>
-        /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        public dynamic Create(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns>The document.</returns>
+        public dynamic Create(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = AsyncTools.RunSync<dynamic>(() => CreateAsync(entity));
-            return response;
+            return (dynamic)AsyncTools.RunSync<dynamic>(() => CreateAsync(entity, requestOptions));
         }
 
         /// <summary>
         /// Replaces the document.
         /// </summary>
-        /// <returns>The document.</returns>
         /// <param name="entity">Entity.</param>
-        public async Task<dynamic> ReplaceAsync(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns>The document.</returns>
+        public async Task<dynamic> ReplaceAsync(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = await _repository.ReplaceDocumentAsync(entity);
-            return response;
+            return (dynamic)await _repository.ReplaceDocumentAsync(entity, requestOptions).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Replaces the document.
         /// </summary>
+        /// <param name="entity">Entity.</param>
+        /// <param name="requestOptions">Request options.</param>
         /// <returns>The document.</returns>
-        /// <param name="entity">Entity.</param>
-        public dynamic Replace(dynamic entity)
+        public dynamic Replace(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = AsyncTools.RunSync<dynamic>(() => ReplaceAsync(entity));
-            return response;
+            return (dynamic)AsyncTools.RunSync<dynamic>(() => ReplaceAsync(entity, requestOptions));
         }
 
         /// <summary>
         /// Delete the specified id.
         /// </summary>
-        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
         /// <param name="id">The id of the document.</param>
-        public async Task<bool> DeleteAsync(string id)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        public Task<bool> DeleteAsync(string id, RequestOptions requestOptions = null)
         {
-            var response = await _repository.DeleteDocumentAsync(id).ConfigureAwait(false);
-            return response;
+            return _repository.DeleteDocumentAsync(id, requestOptions);
         }
 
         /// <summary>
         /// Delete the specified id.
         /// </summary>
-        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
         /// <param name="id">The id of the document.</param>
-        public bool Delete(string id)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        public bool Delete(string id, RequestOptions requestOptions = null)
         {
-            var response = AsyncTools.RunSync(() => DeleteAsync(id));
-            return response;
+            return AsyncTools.RunSync(() => DeleteAsync(id, requestOptions));
         }
 
         /// <summary>
         /// Delete the specified id.
         /// </summary>
-        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
         /// <param name="entity">Entity.</param>
-        public async Task<bool> DeleteAsync(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        public async Task<bool> DeleteAsync(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = await _repository.DeleteDocumentAsync(entity);
-            return response;
+            return (dynamic)await _repository.DeleteDocumentAsync(entity, requestOptions);
         }
 
         /// <summary>
         /// Delete the specified id.
         /// </summary>
-        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
         /// <param name="entity">Entity.</param>
-        public bool Delete(dynamic entity)
+        /// <param name="requestOptions">Request options.</param>
+        /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
+        public bool Delete(dynamic entity, RequestOptions requestOptions = null)
         {
-            var response = AsyncTools.RunSync<bool>(() => DeleteAsync(BaseRepository<dynamic>.GetId(entity)));
-            return response;
+            return AsyncTools.RunSync<bool>(() => DeleteAsync(BaseRepository<dynamic>.GetId(entity), requestOptions));
         }
 
         /// <summary>
         /// Gets all documents.
         /// </summary>
+        /// <param name="feedOptions"></param>
         /// <returns>The documents.</returns>
-        private async Task<IList<dynamic>> GetAllAsync()
+        Task<IList<dynamic>> GetAllAsync(FeedOptions feedOptions = null)
         {
             var query = new SqlQuerySpecQuery<dynamic>();
             var sq = query.ToGetAll();
 
-            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(sq)).ConfigureAwait(false);
+            return _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(sq), feedOptions);
         }
 
         /// <summary>
         /// Gets all documents.
         /// </summary>
+        /// <param name="feedOptions">Feed options.</param>
         /// <returns>The documents.</returns>
-        public IList<dynamic> GetAll()
+        public IList<dynamic> GetAll(FeedOptions feedOptions = null)
         {
-            var response = AsyncTools.RunSync(GetAllAsync);
-            return response;
+            return AsyncTools.RunSync(() => GetAllAsync(feedOptions));
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public async Task<IList<dynamic>> GetListAsync(SqlQuerySpec query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public Task<IList<dynamic>> GetListAsync(SqlQuerySpec query, FeedOptions feedOptions = null)
         {
-            return await _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(query)).ConfigureAwait(false);
+            return _repository.GetListHelperAsync(new SqlQuerySpecQuery<dynamic>(query), feedOptions);
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public async Task<IList<dynamic>> GetListAsync(DynamicQuery query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public Task<IList<dynamic>> GetListAsync(DynamicQuery query, FeedOptions feedOptions = null)
         {
-            return await _repository.GetListHelperAsync(query).ConfigureAwait(false);
+            return _repository.GetListHelperAsync(query, feedOptions);
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public async Task<IList<dynamic>> GetListAsync(string query, object parameters)
+        /// <param name="parameters">Sql parameters.</param>
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public Task<IList<dynamic>> GetListAsync(string query, object parameters, FeedOptions feedOptions = null)
         {
-            return await _repository.GetListHelperAsync(new DynamicQuery<dynamic>(query, parameters)).ConfigureAwait(false);
+            return _repository.GetListHelperAsync(new DynamicQuery<dynamic>(query, parameters), feedOptions);
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public IList<dynamic> GetList(SqlQuerySpec query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public IList<dynamic> GetList(SqlQuerySpec query, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetListAsync(query));
+            return AsyncTools.RunSync(() => GetListAsync(query, feedOptions));
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public IList<dynamic> GetList(DynamicQuery query)
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public IList<dynamic> GetList(DynamicQuery query, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetListAsync(query));
+            return AsyncTools.RunSync(() => GetListAsync(query, feedOptions));
         }
 
         /// <summary>
         /// Gets the list of documents.
         /// </summary>
-        /// <returns>The documents.</returns>
         /// <param name="query">Query.</param>
-        public IList<dynamic> GetList(string query, object parameters = null)
+        /// <param name="parameters">Sql parameters.</param>
+        /// <param name="feedOptions">Feed options.</param>
+        /// <returns>The documents.</returns>
+        public IList<dynamic> GetList(string query, object parameters = null, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<dynamic>(query, parameters).ToSqlQuerySpec()));
+            return AsyncTools.RunSync(() => GetListAsync(new DynamicQuery<dynamic>(query, parameters).ToSqlQuerySpec(), feedOptions));
         }
     }
 }
