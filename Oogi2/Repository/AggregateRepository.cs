@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Documents;
+using Microsoft.Azure.Documents.Client;
 using Oogi2.Queries;
 using Oogi2.Tokens;
 using Sushi2;
@@ -15,58 +16,58 @@ namespace Oogi2
             _repository = new BaseRepository<AggregateResult>(connection);
         }
 
-        public async Task<long?> GetAsync(SqlQuerySpec query)
+        public async Task<long?> GetAsync(SqlQuerySpec query, FeedOptions feedOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            var r = await _repository.GetAggregateHelperAsync(new SqlQuerySpecQuery<AggregateResult>(query)).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(new SqlQuerySpecQuery<AggregateResult>(query), feedOptions).ConfigureAwait(false);
 
             return r.Number;
         }
 
-        public async Task<long?> GetAsync(DynamicQuery query)
+        public async Task<long?> GetAsync(DynamicQuery query, FeedOptions feedOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            var r = await _repository.GetAggregateHelperAsync(query).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(query, feedOptions).ConfigureAwait(false);
 
             return r.Number;
         }
 
-        public async Task<long?> GetAsync(string query, object parameters)
+        public async Task<long?> GetAsync(string query, object parameters, FeedOptions feedOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            var r = await _repository.GetAggregateHelperAsync(new DynamicQuery<AggregateResult>(query, parameters)).ConfigureAwait(false);
+            var r = await _repository.GetAggregateHelperAsync(new DynamicQuery<AggregateResult>(query, parameters), feedOptions).ConfigureAwait(false);
 
             return r.Number;
         }
 
-        public long? Get(SqlQuerySpec query)
+        public long? Get(SqlQuerySpec query, FeedOptions feedOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            return AsyncTools.RunSync(() => GetAsync(query));
+            return AsyncTools.RunSync(() => GetAsync(query, feedOptions));
         }
 
-        public long? Get(DynamicQuery query)
+        public long? Get(DynamicQuery query, FeedOptions feedOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            return AsyncTools.RunSync(() => GetAsync(query));
+            return AsyncTools.RunSync(() => GetAsync(query, feedOptions));
         }
 
-        public long? Get(string sql, object parameters)
+        public long? Get(string sql, object parameters, FeedOptions feedOptions = null)
         {
             if (sql == null)
                 throw new System.ArgumentNullException(nameof(sql));
 
-            return AsyncTools.RunSync(() => GetAsync(new DynamicQuery<AggregateResult>(sql, parameters).ToSqlQuerySpec()));
+            return AsyncTools.RunSync(() => GetAsync(new DynamicQuery<AggregateResult>(sql, parameters).ToSqlQuerySpec(), feedOptions));
         }
     }
 }
