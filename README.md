@@ -85,37 +85,37 @@ new
 
 ### Methods for repository
 
-``T GetFirstOrDefault(SqlQuerySpec query)``
-``T GetFirstOrDefault(DynamicQuery query)``
-``T GetFirstOrDefault(string sql, object parameters)``
-``T GetFirstOrDefault(string id)``
+``T GetFirstOrDefault(SqlQuerySpec query, FeedOptions feedOptions = null)``
+``T GetFirstOrDefault(DynamicQuery query, FeedOptions feedOptions = null)``
+``T GetFirstOrDefault(string sql, object parameters, FeedOptions feedOptions = null)``
+``T GetFirstOrDefault(string id, FeedOptions feedOptions = null)``
 
 Get first document found or null. Three types of queries, direct Id of the document or just ``null`` _(in this case EntityType is auto included)_.
 
-``T Upsert(T entity)``
+``T Upsert(T entity, RequestOptions requestOptions = null)``
 
 Upsert document.
 
-``T Create(T entity)``
+``T Create(T entity, RequestOptions requestOptions = null)``
 
 Create document.
 
-``T Replace(T entity)``
+``T Replace(T entity, RequestOptions requestOptions = null)``
 
 Replace document.
 
-``bool Delete(string id)``
-``bool Delete(T entity)``
+``bool Delete(string id, RequestOptions requestOptions = null)``
+``bool Delete(T entity, RequestOptions requestOptions = null)``
 
 Delete document.
 
-``IList<T> GetAll()``
+``IList<T> GetAll(FeedOption feedOptions = null)``
 
 Get all documents _(in this case EntityType is auto included)_.
 
-``IList<T> GetList(SqlQuerySpec query)``
-``IList<T> GetList(DynamicQuery query)``
-``IList<T> GetList(string query, object parameters = null)``
+``IList<T> GetList(SqlQuerySpec query, FeedOptions feedOptions = null)``
+``IList<T> GetList(DynamicQuery query, FeedOptions feedOptions = null)``
+``IList<T> GetList(string query, object parameters = null, FeedOptions feedOptions = null)``
 
 Get list of documents.
 
@@ -130,9 +130,9 @@ var einstein = repo.GetList("select max(c.iq) from c where c.gender", new { gend
 
 ### Methods for aggregate repository
 
-``long? Get(SqlQuerySpec query)``
-``long? Get(DynamicQuery query)``
-``long? Get(string sql, object parameters)``
+``long? Get(SqlQuerySpec query, FeedOptions feedOptions = null)``
+``long? Get(DynamicQuery query, FeedOptions feedOptions = null)``
+``long? Get(string sql, object parameters, FeedOptions feedOptions = null)``
 
 Get a numeric result of aggregate function.
 
