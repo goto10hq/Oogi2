@@ -1,4 +1,5 @@
-﻿using Oogi2.Attributes;
+﻿using Newtonsoft.Json;
+using Oogi2.Attributes;
 using Oogi2.Tokens;
 using System.Collections.Generic;
 using static Oogi2.Tests.Helpers.Enums;
@@ -18,6 +19,9 @@ namespace Oogi2.Tests.Helpers
         public IEnumerable<string> Parts { get; set; } = new List<string>();
         public string Message { get; set; }
         public State State { get; set; }
+
+        [JsonProperty("_etag")]
+        public string ETag { get; set; }
 
         public Robot()
         {

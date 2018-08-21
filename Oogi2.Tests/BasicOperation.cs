@@ -9,6 +9,10 @@ using Microsoft.Azure.Documents;
 using Oogi2.Tests.Helpers;
 using static Oogi2.Tests.Helpers.Enums;
 using System;
+using System.Threading.Tasks;
+using Microsoft.Azure.Documents.Client;
+using System.Net.Http.Headers;
+using System.Reflection;
 
 namespace Tests
 {
@@ -232,28 +236,47 @@ namespace Tests
         }
 
         [TestMethod]
-        public void SelectEscaped()
+        public async Task SelectEscapedAsync()
         {
-            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.message = @message")
-            {
-                Parameters = new SqlParameterCollection
-                                     {
-                                         new SqlParameter("@entity", Robot.Entity),
-                                         new SqlParameter("@message", @"\'\\''")
-                                     }
-            };
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.message = @message",
+                new
+                {
+                    entity = Robot.Entity,
+                    message = @"\'\\''"
+                }
+            );
 
-            var robot = _repo.GetFirstOrDefault(q);
+            var robot = await _repo.GetFirstOrDefaultAsync(q).ConfigureAwait(false);
+
             Assert.AreNotEqual(robot, null);
 
-            if (robot != null)
-            {
-                var oldId = robot.Id;
-                _repo.GetFirstOrDefault(oldId);
+            var oldId = robot.Id;
+            robot = await _repo.GetFirstOrDefaultAsync(oldId).ConfigureAwait(false);
 
-                Assert.AreNotEqual(robot, null);
-                Assert.AreEqual(robot.Id, oldId);
-            }
+            Assert.AreNotEqual(robot, null);
+            Assert.AreEqual(robot.Id, oldId);
+        }
+
+        [TestMethod]
+        public void SelectEscaped()
+        {
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.message = @message",
+                new
+                {
+                    entity = Robot.Entity,
+                    message = @"\'\\''"
+                }
+            );
+
+            var robot = _repo.GetFirstOrDefault(q);
+
+            Assert.AreNotEqual(robot, null);
+
+            var oldId = robot.Id;
+            robot = _repo.GetFirstOrDefault(oldId);
+
+            Assert.AreNotEqual(robot, null);
+            Assert.AreEqual(robot.Id, oldId);
         }
 
         [TestMethod]
@@ -294,6 +317,39 @@ namespace Tests
             movies = repo.GetList("select * from c where c.rating <> null", null);
 
             Assert.AreEqual(2, movies.Count);
+        }
+
+        [TestMethod]
+        public async Task OptimisticConcurrency()
+        {
+            var robot = await _repo.GetFirstOrDefaultAsync("select top 1 * from c where c.entity = @entity order by c.artificialIq", new { entity = Robot.Entity }).ConfigureAwait(false);
+
+            var ro = new RequestOptions { AccessCondition = new AccessCondition { Condition = robot.ETag, Type = AccessConditionType.IfMatch } };
+
+            var ro2 = await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
+
+            Assert.AreNotEqual(robot.ETag, ro2.ETag);
+
+            // Microsoft.Azure.Documents.PreconditionFailedException is being thrown
+
+            var ok = false;
+
+            try
+            {
+                await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
+            }
+            catch (DocumentClientException)
+            {
+                ok = true;
+            }
+
+            Assert.AreEqual(true, ok);
+
+            ok = false;
+            await _repo.ReplaceAsync(robot).ConfigureAwait(false);
+            ok = true;
+
+            Assert.AreEqual(true, ok);
         }
     }
 }

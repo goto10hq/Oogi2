@@ -21,24 +21,24 @@ namespace Oogi2
         /// Gets the client.
         /// </summary>
         /// <value>The client.</value>
-        public DocumentClient Client { get; private set; }
+        public DocumentClient Client { get; }
 
         /// <summary>
         /// Gets the database identifier.
         /// </summary>
         /// <value>The database identifier.</value>
-        public string DatabaseId { get; private set; }
+        public string DatabaseId { get; }
 
         /// <summary>
         /// Gets the collection identifier.
         /// </summary>
         /// <value>The collection identifier.</value>
-        public string CollectionId { get; private set; }
+        public string CollectionId { get; }
 
         /// <summary>
         /// Initializes the <see cref="T:Oogi2.Connection"/> class.
         /// Set default Json ser/deser settings.
-        /// TODO: provide trought settings in ctor.
+        /// TODO: provide throught settings in ctor.
         /// </summary>
         static Connection()
         {
@@ -220,8 +220,7 @@ namespace Oogi2
             }
             catch (DocumentClientException)
             {
-                var response = await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId }).ConfigureAwait(false);
-                return response;
+                return await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId }).ConfigureAwait(false);
             }
 
             return null;
@@ -243,15 +242,12 @@ namespace Oogi2
         public async Task<bool> DeleteCollectionAsync()
         {
             var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).ConfigureAwait(false);
-            var isSuccess = response.StatusCode == HttpStatusCode.NoContent;
-            return isSuccess;
+            return response.StatusCode == HttpStatusCode.NoContent;
         }
 
         internal async Task<object> DeleteAsync(string id)
         {
-            var response = await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)).ConfigureAwait(false);
-
-            return response;
+            return await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)).ConfigureAwait(false);
         }
 
         internal static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
@@ -271,9 +267,9 @@ namespace Oogi2
             return entitiesRetrieved;
         }
 
-        internal static async Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
+        internal static Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
         {
-            return await query.ExecuteNextAsync<dynamic>().ConfigureAwait(false);
+            return query.ExecuteNextAsync<dynamic>();
         }
     }
 }

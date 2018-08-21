@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Oogi2;
+using Oogi2.Tests.Helpers;
 using Oogi2.Tokens;
 
 namespace Tests
@@ -150,7 +151,7 @@ namespace Tests
         [TestMethod]
         public void Nulls()
         {
-            string a = null;
+            const string a = null;
             float? b = null;
             Guid? c = null;
 
@@ -165,6 +166,23 @@ namespace Tests
             var sql = q.ToSqlQuery();
 
             Assert.AreEqual("a = null, b = null, c = null", sql);
+        }
+
+        [TestMethod]
+        public void Escaping()
+        {
+            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.message = @message")
+            {
+                Parameters = new SqlParameterCollection
+                                     {
+                                         new SqlParameter("@entity", Robot.Entity),
+                                         new SqlParameter("@message", @"\'\\''")
+                                     }
+            };
+
+            var sql = q.ToSqlQuery();
+
+            Assert.AreEqual(@"select * from c where c.entity = 'oogi2/robot' and c.message = '\\\'\\\\\'\''", sql);
         }
     }
 }

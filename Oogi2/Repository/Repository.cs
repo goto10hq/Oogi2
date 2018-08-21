@@ -107,11 +107,11 @@ namespace Oogi2
         /// Gets the first or default document.
         /// </summary>
         /// <param name="id">The id of the document.</param>
-        /// <param name="requestOptions">Request options.</param>
+        /// <param name="feedOptions">Feed options.</param>
         /// <returns>The first document.</returns>
-        public T GetFirstOrDefault(string id, RequestOptions requestOptions = null)
+        public T GetFirstOrDefault(string id, FeedOptions feedOptions = null)
         {
-            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id, requestOptions));
+            return AsyncTools.RunSync(() => GetFirstOrDefaultAsync(id, feedOptions));
         }
 
         /// <summary>
