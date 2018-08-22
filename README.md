@@ -6,6 +6,7 @@
 [![Latest Version on NuGet](https://img.shields.io/nuget/v/Oogi2.svg?style=flat-square)](https://www.nuget.org/packages/Oogi2/)
 [![NuGet](https://img.shields.io/nuget/dt/Oogi2.svg?style=flat-square)](https://www.nuget.org/packages/Oogi2/)
 [![Visual Studio Team services](https://img.shields.io/vso/build/frohikey/c3964e53-4bf3-417a-a96e-661031ef862f/118.svg?style=flat-square)](https://github.com/goto10hq/Oogi2)
+[![.NETStandard 2.0](https://img.shields.io/badge/.NETStandard-2.0-blue.svg?style=flat-square)](https://github.com/dotnet/standard/blob/master/docs/versions/netstandard2.0.md)
 
 ## Connection
 
