@@ -87,8 +87,11 @@ new
 ### Methods for repository
 
 ``T GetFirstOrDefault(SqlQuerySpec query, FeedOptions feedOptions = null)``
+
 ``T GetFirstOrDefault(DynamicQuery query, FeedOptions feedOptions = null)``
+
 ``T GetFirstOrDefault(string sql, object parameters, FeedOptions feedOptions = null)``
+
 ``T GetFirstOrDefault(string id, FeedOptions feedOptions = null)``
 
 Get first document found or null. Three types of queries, direct Id of the document or just ``null`` _(in this case EntityType is auto included)_.
@@ -106,6 +109,7 @@ Create document.
 Replace document.
 
 ``bool Delete(string id, RequestOptions requestOptions = null)``
+
 ``bool Delete(T entity, RequestOptions requestOptions = null)``
 
 Delete document.
@@ -115,7 +119,9 @@ Delete document.
 Get all documents _(in this case EntityType is auto included)_.
 
 ``IList<T> GetList(SqlQuerySpec query, FeedOptions feedOptions = null)``
+
 ``IList<T> GetList(DynamicQuery query, FeedOptions feedOptions = null)``
+
 ``IList<T> GetList(string query, object parameters = null, FeedOptions feedOptions = null)``
 
 Get list of documents.
@@ -132,7 +138,9 @@ var einstein = repo.GetList("select max(c.iq) from c where c.gender", new { gend
 ### Methods for aggregate repository
 
 ``long? Get(SqlQuerySpec query, FeedOptions feedOptions = null)``
+
 ``long? Get(DynamicQuery query, FeedOptions feedOptions = null)``
+
 ``long? Get(string sql, object parameters, FeedOptions feedOptions = null)``
 
 Get a numeric result of aggregate function.
