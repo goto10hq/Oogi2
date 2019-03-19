@@ -44,7 +44,7 @@ Delete collection.
 
 Generic and non-generic repositories are available. 
 
-Easiest way is using non-generic repo like that:
+Easiest way is using non-generic repository like that:
 
 ```csharp
 var repo = new Repository(connection);
@@ -132,7 +132,7 @@ Helper repository for aggregate calls. It automagically handles possibility of p
 
 ```csharp
 var agr = new AggregateRepository(connection);
-var einstein = repo.GetList("select max(c.iq) from c where c.gender", new { gender = "M" });
+var einstein = repo.Get("select max(c.iq) from c where c.gender", new { gender = "M" });
 ```
 
 ### Methods for aggregate repository
@@ -200,7 +200,7 @@ results in:
 
 ### DynamicQuery
 
-More conformatable way:
+More comfort way:
 
 ```csharp
 var ids = new List<int> { 4, 5, 2 };
@@ -230,7 +230,7 @@ results in:
 
 Of course.
 
-### Linq
+### LINQ
 
 Not at the moment. I don't like it very much. I'm gonna implement it maybe in the future.
 
