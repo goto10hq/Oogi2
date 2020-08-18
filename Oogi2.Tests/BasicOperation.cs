@@ -20,6 +20,7 @@ namespace Tests
     public class BasicOperation
     {
         static Repository<Robot> _repo;
+        static Repository<FakeRobot> _fakeRepo;
         static AggregateRepository _aggregate;
         static Connection _con;
 
@@ -45,6 +46,7 @@ namespace Tests
             _con.CreateCollection();
 
             _repo = new Repository<Robot>(_con);
+            _fakeRepo = new Repository<FakeRobot>(_con);
             _aggregate = new AggregateRepository(_con);
 
             foreach (var robot in _robots.Take(_robots.Count - 1))
@@ -233,6 +235,12 @@ namespace Tests
 
             Assert.AreNotEqual(robot, null);
             Assert.AreEqual(190, robot.ArtificialIq);
+
+            var fakeRobot = new FakeRobot("Sagiri", 111, true, new List<string>(), State.Sleeping);
+            fakeRobot = _fakeRepo.Create(fakeRobot);
+
+            Assert.AreEqual(fakeRobot.Id, _fakeRepo.GetFirstOrDefault(fakeRobot.Id).Id);
+            Assert.IsNull(_repo.GetFirstOrDefault(fakeRobot.Id));            
         }
 
         [TestMethod]
@@ -328,9 +336,7 @@ namespace Tests
 
             var ro2 = await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
 
-            Assert.AreNotEqual(robot.ETag, ro2.ETag);
-
-            // Microsoft.Azure.Documents.PreconditionFailedException is being thrown
+            Assert.AreNotEqual(robot.ETag, ro2.ETag);            
 
             var ok = false;
 
