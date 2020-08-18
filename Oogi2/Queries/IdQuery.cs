@@ -18,21 +18,35 @@ namespace Oogi2.Queries
 
         public SqlQuerySpec ToSqlQuerySpec()
         {
-            return new SqlQuerySpec($"select * from c where c.id = @id and c[\"{_entityName}\"] = @entity", 
-                new SqlParameterCollection 
-                { 
-                    new SqlParameter("@id", _id), 
-                    new SqlParameter("@entity", _entityValue) 
+            if (_entityName == null)
+                return new SqlQuerySpec($"select * from c where c.id = @id",
+                    new SqlParameterCollection
+                    {
+                        new SqlParameter("@id", _id)
+                    });
+
+            return new SqlQuerySpec($"select * from c where c.id = @id and c[\"{_entityName}\"] = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@id", _id),
+                    new SqlParameter("@entity", _entityValue)
                 });
         }
 
         public SqlQuerySpec ToGetFirstOrDefault()
         {
-            return new SqlQuerySpec($"select top 1 * from c where c.id = @id and c[\"{_entityName}\"] = @entity", 
-                new SqlParameterCollection 
-                { 
-                    new SqlParameter("@id", _id), 
-                    new SqlParameter("@entity", _entityValue) 
+            if (_entityName == null)
+                return new SqlQuerySpec($"select top 1 * from c where c.id = @id",
+                    new SqlParameterCollection
+                    {
+                        new SqlParameter("@id", _id)
+                    });
+
+            return new SqlQuerySpec($"select top 1 * from c where c.id = @id and c[\"{_entityName}\"] = @entity",
+                new SqlParameterCollection
+                {
+                    new SqlParameter("@id", _id),
+                    new SqlParameter("@entity", _entityValue)
                 });
         }
 

@@ -11,8 +11,6 @@ using static Oogi2.Tests.Helpers.Enums;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents.Client;
-using System.Net.Http.Headers;
-using System.Reflection;
 
 namespace Tests
 {
@@ -22,6 +20,7 @@ namespace Tests
         static Repository<Robot> _repo;
         static Repository<FakeRobot> _fakeRepo;
         static AggregateRepository _aggregate;
+        static Repository _dynamic;
         static Connection _con;
 
         readonly List<Robot> _robots = new List<Robot>
@@ -48,6 +47,7 @@ namespace Tests
             _repo = new Repository<Robot>(_con);
             _fakeRepo = new Repository<FakeRobot>(_con);
             _aggregate = new AggregateRepository(_con);
+            _dynamic = new Repository(_con);
 
             foreach (var robot in _robots.Take(_robots.Count - 1))
                 _repo.Create(robot);
@@ -240,7 +240,9 @@ namespace Tests
             fakeRobot = _fakeRepo.Create(fakeRobot);
 
             Assert.AreEqual(fakeRobot.Id, _fakeRepo.GetFirstOrDefault(fakeRobot.Id).Id);
-            Assert.IsNull(_repo.GetFirstOrDefault(fakeRobot.Id));            
+            Assert.IsNull(_repo.GetFirstOrDefault(fakeRobot.Id));    
+
+            Assert.AreEqual(fakeRobot.Id, _dynamic.GetFirstOrDefault(fakeRobot.Id).id);
         }
 
         [TestMethod]
@@ -262,7 +264,7 @@ namespace Tests
             robot = await _repo.GetFirstOrDefaultAsync(oldId).ConfigureAwait(false);
 
             Assert.AreNotEqual(robot, null);
-            Assert.AreEqual(robot.Id, oldId);
+            Assert.AreEqual(robot.Id, oldId);            
         }
 
         [TestMethod]
