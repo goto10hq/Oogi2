@@ -1,18 +1,16 @@
-﻿using Microsoft.Azure.Documents;
-using Oogi2.Attributes;
-using Sushi2;
+﻿using Microsoft.Azure.Cosmos;
+using Oogi2.Entities;
 
 namespace Oogi2.Queries
 {
-    public class DynamicQuery<T> : IQuery where T : class
+    public class DynamicQuery<T> : IQuery, IQuery<T> where T : BaseEntity
     {
         readonly object _parameters;
         readonly string _sql;
-        readonly string _entityName = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Name);
-        readonly string _entityValue = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Value);
+        const string EntityName = "entity";
 
-        SqlQuerySpec _sqlQuerySpec;
-        SqlQuerySpec SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
+        QueryDefinition _sqlQuerySpec;
+        QueryDefinition SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
 
         public DynamicQuery()
         {
@@ -24,12 +22,12 @@ namespace Oogi2.Queries
             _parameters = parameters;
         }
 
-        static SqlQuerySpec ConvertToSqlQuerySpec(string sql, object parameters)
+        static QueryDefinition ConvertToSqlQuerySpec(string sql, object parameters)
         {
             if (string.IsNullOrEmpty(sql))
                 return null;
 
-            var sqlqs = new SqlQuerySpec(sql);
+            var sqlqs = new QueryDefinition(sql);
 
             if (parameters == null)
                 return sqlqs;
@@ -39,41 +37,41 @@ namespace Oogi2.Queries
             if (sqlParameters == null)
                 return sqlqs;
 
-            return new SqlQuerySpec(sql, sqlParameters);
+            var result = new QueryDefinition(sqlqs.QueryText);
+
+            foreach (var (Name, Value) in sqlParameters)
+            {
+                result = result.WithParameter(Name, Value);
+            }
+
+            return result;
         }
 
-        public SqlQuerySpec ToSqlQuerySpec()
+        public QueryDefinition ToQueryDefinition(T item)
         {
             return SqlQuerySpec;
         }
 
-        public SqlQuerySpec ToGetFirstOrDefault()
+        public QueryDefinition ToGetFirstOrDefault(T item)
         {
             if (SqlQuerySpec == null)
             {
-                if (_entityName == null)
-                    return new SqlQuerySpec("select top 1 * from c");
-
-                return new SqlQuerySpec($"select top 1 * from c where c[\"{_entityName}\"] = @entity",
-                    new SqlParameterCollection
-                    {
-                        new SqlParameter("@entity", _entityValue)
-                    });
+                return new QueryDefinition($"select top 1 * from c where c[\"{EntityName}\"] = @entity")
+                    .WithParameter("@entity", item.Entity);
             }
 
             return SqlQuerySpec;
         }
 
-        public SqlQuerySpec ToGetAll()
+        public QueryDefinition ToGetAll(T item)
         {
-            if (_entityName == null)
-                return new SqlQuerySpec("select * from c");
+            return new QueryDefinition($"select * from c where c[\"{EntityName}\"] = @entity")
+                .WithParameter("@entity", item.Entity);
+        }
 
-            return new SqlQuerySpec($"select * from c where c[\"{_entityName}\"] = @entity",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@entity", _entityValue)
-                });
+        public QueryDefinition ToQueryDefinition()
+        {
+            return SqlQuerySpec;
         }
     }
 
@@ -82,8 +80,8 @@ namespace Oogi2.Queries
         readonly object _parameters;
         readonly string _sql;
 
-        SqlQuerySpec _sqlQuerySpec;
-        SqlQuerySpec SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
+        QueryDefinition _sqlQuerySpec;
+        QueryDefinition SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
 
         public DynamicQuery()
         {
@@ -95,12 +93,12 @@ namespace Oogi2.Queries
             _parameters = parameters;
         }
 
-        static SqlQuerySpec ConvertToSqlQuerySpec(string sql, object parameters)
+        static QueryDefinition ConvertToSqlQuerySpec(string sql, object parameters)
         {
             if (string.IsNullOrEmpty(sql))
                 return null;
 
-            var sqlqs = new SqlQuerySpec(sql);
+            var sqlqs = new QueryDefinition(sql);
 
             if (parameters == null)
                 return sqlqs;
@@ -110,22 +108,29 @@ namespace Oogi2.Queries
             if (sqlParameters == null)
                 return sqlqs;
 
-            return new SqlQuerySpec(sql, sqlParameters);
+            var result = new QueryDefinition(sql);
+
+            foreach (var (Name, Value) in sqlParameters)
+            {
+                result = result.WithParameter(Name, Value);
+            }
+
+            return result;
         }
 
-        public SqlQuerySpec ToSqlQuerySpec()
+        public QueryDefinition ToQueryDefinition()
         {
             return SqlQuerySpec;
         }
 
-        public SqlQuerySpec ToGetFirstOrDefault()
+        public QueryDefinition ToGetFirstOrDefault()
         {
-            return SqlQuerySpec ?? new SqlQuerySpec("select top 1 * from c");
+            return SqlQuerySpec ?? new QueryDefinition("select top 1 * from c");
         }
 
-        public SqlQuerySpec ToGetAll()
+        public QueryDefinition ToGetAll()
         {
-            return new SqlQuerySpec("select * from c");
+            return new QueryDefinition("select * from c");
         }
     }
 }

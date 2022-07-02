@@ -2,12 +2,11 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/.vs/Oogi2/v15
+/.vs
 /Oogi2/bin/Debug/netstandard2.0
 /Oogi2/obj
 /Oogi2.Tests/bin/Debug/netstandard2.0
 /Oogi2.Tests/obj
-/.vs/config
 /Oogi2.Tests/bin/Debug/netcoreapp2.0
 Oogi2.userprefs
 Oogi2.Tests/Oogi2.Tests.userprefs
@@ -16,7 +15,5 @@ Oogi2.Cmd/obj/
 /Oogi2/bin/Debug
 /Oogi2.Tests/bin/Release/netcoreapp2.0
 /Oogi2/bin/Release/netstandard2.0
-/.vs/Oogi2/DesignTimeBuild/.dtbcache
 /Oogi2.Tests/bin/Debug/netcoreapp2.1
-.vs/Oogi2/DesignTimeBuild/.dtbcache.v2
-.vs/Oogi2/v16/.suo
+Oogi2.Tests/bin

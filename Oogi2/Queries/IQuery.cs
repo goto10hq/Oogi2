@@ -1,10 +1,16 @@
-﻿using Microsoft.Azure.Documents;
+﻿using Microsoft.Azure.Cosmos;
+using Oogi2.Entities;
 
 namespace Oogi2.Queries
 {
-    public interface IQuery
+    public interface IQuery<T> where T : BaseEntity
     {
-        SqlQuerySpec ToSqlQuerySpec();
-        SqlQuerySpec ToGetFirstOrDefault();        
+        QueryDefinition ToQueryDefinition(T item);
+        QueryDefinition ToGetFirstOrDefault(T item);        
+    }
+
+    public interface IQuery 
+    {
+        QueryDefinition ToQueryDefinition();     
     }
 }

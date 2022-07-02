@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
-using Sushi2;
-using Microsoft.Azure.Documents.Linq;
-using System.Runtime.InteropServices;
 using System.Net;
+using Microsoft.Azure.Cosmos;
+using Oogi2.Helpers;
+using System.IO;
+using System.Text;
+using Oogi2.Exceptions;
+using System.Reflection;
 
 namespace Oogi2
 {
@@ -18,10 +18,10 @@ namespace Oogi2
     public class Connection : IConnection
     {
         /// <summary>
-        /// Gets the client.
+        /// Gets the cosmos client.
         /// </summary>
-        /// <value>The client.</value>
-        public DocumentClient Client { get; }
+        /// <value>The cosmos client.</value>
+        public CosmosClient Client { get; }
 
         /// <summary>
         /// Gets the database identifier.
@@ -29,17 +29,20 @@ namespace Oogi2
         /// <value>The database identifier.</value>
         public string DatabaseId { get; }
 
+        public PartitionKey PartitionKey { get; set; }
+
         /// <summary>
         /// Gets the collection identifier.
         /// </summary>
         /// <value>The collection identifier.</value>
-        public string CollectionId { get; }
+        public string ContainerId { get; }
 
-        /// <summary>
-        /// Initializes the <see cref="T:Oogi2.Connection"/> class.
-        /// Set default Json ser/deser settings.
-        /// TODO: provide throught settings in ctor.
-        /// </summary>
+        public Container Container { get; }
+
+        public Database Database { get; }
+
+        static readonly CustomSerializer _serializer = new CustomSerializer();
+
         static Connection()
         {
             Tools.SetJsonDefaultSettings();
@@ -51,225 +54,175 @@ namespace Oogi2
         /// <param name="endpoint">Endpoint.</param>
         /// <param name="authorizationKey">Authorization key.</param>
         /// <param name="database">Database.</param>
-        /// <param name="collection">Collection.</param>
-        /// <param name="connectionPolicy">Connection policy.</param>
-        public Connection(string endpoint, string authorizationKey, string database, string collection, ConnectionPolicy connectionPolicy = null)
+        /// <param name="container">Collection.</param>
+        /// <param name="options">Options.</param>
+        public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey = null, CosmosClientOptions options = null)
         {
-            var defaultConnectionPolicy = new ConnectionPolicy
+            CosmosClientOptions clientOptions = options ?? new CosmosClientOptions()
             {
-                RetryOptions = new RetryOptions
-                {
-                    MaxRetryAttemptsOnThrottledRequests = 1000,
-                    MaxRetryWaitTimeInSeconds = 60
-                }
+                Serializer = new CustomSerializer()
             };
 
-            // direct mode works only on Windows
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                defaultConnectionPolicy.ConnectionMode = ConnectionMode.Direct;
-                defaultConnectionPolicy.ConnectionProtocol = Protocol.Tcp;
-            }
-
-            Client = new DocumentClient
-                (
-                new Uri(endpoint),
-                authorizationKey,
-                Tools.DefaultJsonSerializerSettings ?? new JsonSerializerSettings(),
-                connectionPolicy ?? defaultConnectionPolicy
-                );
-
+            Client = new CosmosClient(endpoint, authorizationKey, clientOptions);
             DatabaseId = database;
-            CollectionId = collection;
+            ContainerId = container;
+            PartitionKey = string.IsNullOrEmpty(partitionKey) ? PartitionKey.None : new PartitionKey(partitionKey);
+
+            Database = Client.GetDatabase(database);
+
+            if (PartitionKey != PartitionKey.None)
+                Database.CreateContainerIfNotExistsAsync(container, partitionKey).Wait();
+
+            Container = Client.GetContainer(database, container);
         }
 
         /// <summary>
         /// Upserts the json document(s) directly.
         /// </summary>
-        /// <returns>Objects.</returns>
+        /// <returns>A list of documents.</returns>
         /// <param name="jsonString">Json string.</param>
-        public List<object> UpsertJson(string jsonString)
-        {
-            return AsyncTools.RunSync(() => UpsertJsonAsync(jsonString));
-        }
-
-        /// <summary>
-        /// Upserts the json document(s) directly.
-        /// </summary>
-        /// <returns>Objects.</returns>
-        /// <param name="jsonString">Json string.</param>
-        public async Task<List<object>> UpsertJsonAsync(string jsonString)
+        public async Task<List<T>> UpsertJsonAsync<T>(string jsonString)
         {
             if (jsonString == null)
                 throw new ArgumentNullException(nameof(jsonString));
 
-            var result = new List<object>();
-            var docs = JsonConvert.DeserializeObject<List<object>>(jsonString);
+            var byteArray = Encoding.UTF8.GetBytes(jsonString);
 
-            foreach (var doc in docs)
+            using (var stream = new MemoryStream(byteArray))
             {
-                result.Add(await Client.UpsertDocumentAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), doc).ConfigureAwait(false));
+                using (var responseMessage = await Container.CreateItemStreamAsync(stream, PartitionKey))
+                {
+                    if (responseMessage.StatusCode != HttpStatusCode.Created && responseMessage.StatusCode != HttpStatusCode.OK)
+                        throw new OogiException($"UpsertJsonAsync failed with status code {responseMessage.StatusCode}.");
+
+                    return _serializer.FromStream<IList<T>>(responseMessage.Content).ToList();
+                }
+            }
+        }
+
+        public async Task<T> QueryOneItemAsync<T>(string query)
+        {
+            using (FeedIterator<T> setIterator = Container.GetItemQueryIterator<T>(query, requestOptions: new QueryRequestOptions { MaxItemCount = 1 }))
+            {
+                while (setIterator.HasMoreResults)
+                {
+                    foreach (T item in await setIterator.ReadNextAsync())
+                    {
+                        return item;
+                    }
+                }
             }
 
-            return result;
+            return default;
         }
 
-        internal async Task<object> ExecuteQueryAsync(string query)
+        public async Task<bool> DeleteContainerAsync()
         {
-            var q = Client.CreateDocumentQuery(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), query).AsDocumentQuery();
-            var result = await QueryMoreDocumentsAsync(q).ConfigureAwait(false);
+            var responseMessage = await Container.DeleteContainerAsync();
 
-            return result;
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"DeleteContainerAsync failed with status code {responseMessage.StatusCode}.");
+
+            return true;
         }
 
-        internal object ExecuteQuery(string query)
+        public async Task<bool> DeleteItemAsync<T>(string id)
         {
-            var result = AsyncTools.RunSync(() => ExecuteQueryAsync(query));
+            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey);
 
-            return result;
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return true;
         }
 
-        /// <summary>
-        /// Creates the stored procedure async.
-        /// </summary>
-        /// <returns>The stored procedure.</returns>
-        /// <param name="storedProcedure">Stored procedure.</param>
-        public async Task<StoredProcedure> CreateStoredProcedureAsync(StoredProcedure storedProcedure)
+        public async Task<bool> DeleteItemAsync<T>(T item)
         {
-            StoredProcedure createdStoredProcedure = await Client.CreateStoredProcedureAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), storedProcedure).ConfigureAwait(false);
+            var id = GetId(item);
+            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey);
 
-            return createdStoredProcedure;
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return true;
         }
 
-        /// <summary>
-        /// Reads the stored procedure async.
-        /// </summary>
-        /// <returns>The stored procedure.</returns>
-        /// <param name="storedProcedureId">Stored procedure identifier.</param>
-        public async Task<StoredProcedure> ReadStoredProcedureAsync(string storedProcedureId)
+        public async Task<T> UpsertItemAsync<T>(T item)
         {
-            StoredProcedure storedProcedure = await Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)).ConfigureAwait(false);
+            SetId(item);
 
-            return storedProcedure;
+            var responseMessage = await Container.UpsertItemAsync<T>(item);
+
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"UpsertItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return responseMessage.Resource;
         }
 
-        /// <summary>
-        /// Reads the stored procedure.
-        /// </summary>
-        /// <returns>The stored procedure.</returns>
-        /// <param name="storedProcedureId">Stored procedure identifier.</param>
-        public StoredProcedure ReadStoredProcedure(string storedProcedureId)
+        public async Task<T> CreateItemAsync<T>(T item)
         {
-            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.ReadStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)));
+            SetId(item);
 
-            return storedProcedure;
+            var responseMessage = await Container.CreateItemAsync<T>(item);
+
+            if (responseMessage.StatusCode != HttpStatusCode.Created)
+                throw new OogiException($"CreateItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return responseMessage.Resource;         
         }
 
-        /// <summary>
-        /// Deletes the stored procedure async.
-        /// </summary>
-        /// <returns>The stored procedure async.</returns>
-        /// <param name="storedProcedureId">Stored procedure identifier.</param>
-        public async Task<StoredProcedure> DeleteStoredProcedureAsync(string storedProcedureId)
+        public async Task<T> ReplaceItemAsync<T>(T item)
         {
-            StoredProcedure storedProcedure = await Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)).ConfigureAwait(false);
+            var id = GetId(item);
+            var responseMessage = await Container.ReplaceItemAsync<T>(item, id);
 
-            return storedProcedure;
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"ReplaceItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return responseMessage.Resource;
         }
 
-        /// <summary>
-        /// Deletes the stored procedure.
-        /// </summary>
-        /// <returns>The stored procedure.</returns>
-        /// <param name="storedProcedureId">Stored procedure identifier.</param>
-        public StoredProcedure DeleteStoredProcedure(string storedProcedureId)
+        public async Task<List<T>> QueryMoreItemsAsync<T>(string query, QueryRequestOptions requestOptions)
         {
-            StoredProcedure storedProcedure = AsyncTools.RunSync(() => Client.DeleteStoredProcedureAsync(UriFactory.CreateStoredProcedureUri(DatabaseId, CollectionId, storedProcedureId)));
+            List<T> results = new List<T>();
 
-            return storedProcedure;
-        }
-
-        /// <summary>
-        /// Creates the stored procedure.
-        /// </summary>
-        /// <returns>The stored procedure.</returns>
-        /// <param name="storedProcedure">Stored procedure.</param>
-        public StoredProcedure CreateStoredProcedure(StoredProcedure storedProcedure)
-        {
-            return AsyncTools.RunSync(() => CreateStoredProcedureAsync(storedProcedure));
-        }
-
-        /// <summary>
-        /// Creates the collection.
-        /// </summary>
-        /// <returns>The collection.</returns>
-        public DocumentCollection CreateCollection()
-        {
-            return AsyncTools.RunSync(CreateCollectionAsync);
-        }
-
-        /// <summary>
-        /// Creates the collection.
-        /// </summary>
-        /// <returns>The collection.</returns>
-        public async Task<DocumentCollection> CreateCollectionAsync()
-        {
-            try
+            using (FeedIterator<T> setIterator = Container.GetItemQueryIterator<T>(
+                query,
+                requestOptions: requestOptions))
             {
-                await Client.ReadDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).ConfigureAwait(false);
-            }
-            catch (DocumentClientException)
-            {
-                return await Client.CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection { Id = CollectionId }).ConfigureAwait(false);
+                while (setIterator.HasMoreResults)
+                {
+                    FeedResponse<T> response = await setIterator.ReadNextAsync();
+                    results.AddRange(response);
+                }
             }
 
-            return null;
+            return results;
         }
 
-        /// <summary>
-        /// Deletes the collection.
-        /// </summary>
-        /// <returns><c>true</c> if collection has been deleted; otherwise, <c>false</c>.</returns>
-        public bool DeleteCollection()
+        internal static void SetId<T>(T entity)
         {
-            return AsyncTools.RunSync(DeleteCollectionAsync);
-        }
+            PropertyInfo propInfoId = typeof(T).GetProperty("Id");
 
-        /// <summary>
-        /// Deletes the collection.
-        /// </summary>
-        /// <returns><c>true</c> if collection has been deleted; otherwise, <c>false</c>.</returns>
-        public async Task<bool> DeleteCollectionAsync()
-        {
-            var response = await Client.DeleteDocumentCollectionAsync(UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId)).ConfigureAwait(false);
-            return response.StatusCode == HttpStatusCode.NoContent;
-        }
-
-        internal async Task<object> DeleteAsync(string id)
-        {
-            return await Client.DeleteDocumentAsync(UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id)).ConfigureAwait(false);
-        }
-
-        internal static async Task<List<dynamic>> QueryMoreDocumentsAsync(IDocumentQuery<dynamic> query)
-        {
-            var entitiesRetrieved = new List<dynamic>();
-
-            while (query.HasMoreResults)
+            if (propInfoId != null)
             {
-                var queryResponse = await QuerySingleDocumentAsync(query).ConfigureAwait(false);
-
-                var entities = queryResponse.AsEnumerable();
-
-                if (entities != null)
-                    entitiesRetrieved.AddRange(entities);
+                if (propInfoId.GetValue(entity) == null)
+                    propInfoId.SetValue(entity, Guid.NewGuid().ToString());
             }
-
-            return entitiesRetrieved;
         }
 
-        internal static Task<FeedResponse<dynamic>> QuerySingleDocumentAsync(IDocumentQuery<dynamic> query)
+        internal static string GetId<T>(T entity)
         {
-            return query.ExecuteNextAsync<dynamic>();
+            PropertyInfo propInfoId = typeof(T).GetProperty("Id");
+
+            if (propInfoId != null)
+            {
+                return propInfoId.GetValue(entity).ToString();
+            }
+            else
+            {
+                throw new OogiException($"Entity {typeof(T)} has got no property named Id.");
+            }
         }
     }
 }

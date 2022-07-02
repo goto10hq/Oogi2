@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.Documents.Client;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.Azure.Cosmos;
 
 namespace Oogi2
 {
@@ -8,10 +10,10 @@ namespace Oogi2
     public interface IConnection
     {
         /// <summary>
-        /// Gets the documentdb client.
+        /// Gets the cosmos client.
         /// </summary>
-        /// <value>The documentdb client.</value>
-        DocumentClient Client { get; }
+        /// <value>The cosmos client.</value>
+        CosmosClient Client { get; }
 
         /// <summary>
         /// Gets the database identifier.
@@ -23,6 +25,14 @@ namespace Oogi2
         /// Gets the collection identifier.
         /// </summary>
         /// <value>The collection identifier.</value>
-        string CollectionId { get; }
+        string ContainerId { get; }
+
+        Task<T> QueryOneItemAsync<T>(string query);
+        Task<List<T>> QueryMoreItemsAsync<T>(string query, QueryRequestOptions requestOptions);
+        Task<T> UpsertItemAsync<T>(T item);
+        Task<T> CreateItemAsync<T>(T item);
+        Task<T> ReplaceItemAsync<T>(T item);
+        Task<bool> DeleteItemAsync<T>(T item);
+        Task<bool> DeleteItemAsync<T>(string id);
     }
 }

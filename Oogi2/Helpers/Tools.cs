@@ -1,9 +1,11 @@
-﻿using System.ComponentModel;
-using Microsoft.Azure.Documents;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Oogi2.Helpers;
-using System.Collections.Generic;
+using Oogi2.Queries;
 
 namespace Oogi2
 {
@@ -21,7 +23,7 @@ namespace Oogi2
                     Formatting = Formatting.None,
                     TypeNameHandling = TypeNameHandling.None,
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),
-                    Converters = new List<JsonConverter> { new JsonClaimConverter() }
+                    Converters = { new JsonClaimConverter() }
                 };
             }
         }
@@ -50,20 +52,41 @@ namespace Oogi2
         /// </summary>
         /// <returns>Sql parameters collections.</returns>
         /// <param name="parameters">Anonymous object.</param>
-        internal static SqlParameterCollection AnonymousObjectToSqlParameters(object parameters)
+        internal static IReadOnlyList<(string Name, object Value)> AnonymousObjectToSqlParameters(object parameters)
         {
             if (parameters == null)
-                return new SqlParameterCollection();
+                return new List<(string Name, object Value)>();
 
-            var collection = new SqlParameterCollection();
+            var collection = new List<(string Name, object Value)>();
 
             foreach (PropertyDescriptor descriptor in TypeDescriptor.GetProperties(parameters))
             {
                 object obj2 = descriptor.GetValue(parameters);
-                collection.Add(new SqlParameter("@" + descriptor.Name, obj2));
+                collection.Add((descriptor.Name, obj2));
             }
 
             return collection;
+        }
+
+        internal static DynamicQuery ToDynamicQuery(this QueryDefinition query)
+        {
+            if (query == null)
+                return null;
+
+            var dq = new DynamicQuery(query.QueryText);
+            var parameters = query.GetQueryParameters();
+            
+            if (parameters == null || !parameters.Any())
+                return dq;
+
+            var collection = new List<(string Name, object Value)>();
+
+            foreach(var (Name, Value) in parameters)
+                collection.Add((Name, Value));
+
+            dq = new DynamicQuery(query.QueryText, collection);
+
+            return dq;
         }
     }
 }

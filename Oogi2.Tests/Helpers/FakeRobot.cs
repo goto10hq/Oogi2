@@ -1,17 +1,13 @@
 ﻿using Newtonsoft.Json;
-using Oogi2.Attributes;
+using Oogi2.Entities;
 using Oogi2.Tokens;
 using System.Collections.Generic;
 using static Oogi2.Tests.Helpers.Enums;
 
 namespace Oogi2.Tests.Helpers
 {
-    [EntityType("entity", Entity)]
-    public class FakeRobot
-    {
-        public const string Entity = "oogi2/fake-robot";
-        public string Id { get; set; }
-
+    public class FakeRobot : BaseEntity
+    {             
         public string Name { get; set; }
         public int ArtificialIq { get; set; }
         public Stamp Created { get; set; } = new Stamp();
@@ -22,6 +18,10 @@ namespace Oogi2.Tests.Helpers
 
         [JsonProperty("_etag")]
         public string ETag { get; set; }
+
+        public override string PartitionKey => "oogi2";
+
+        public override string Entity => Entities.FakeRobot;
 
         public FakeRobot()
         {

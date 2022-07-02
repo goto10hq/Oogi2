@@ -1,73 +1,66 @@
-﻿using Microsoft.Azure.Documents;
-using Microsoft.Azure.Documents.Client;
+﻿using Microsoft.Azure.Cosmos;
 using Oogi2.Queries;
 using Oogi2.Tokens;
-using Sushi2;
 using System.Threading.Tasks;
 
 namespace Oogi2
 {
-    public class AggregateRepository : IRepository
+    public class AggregateRepository
     {
-        readonly BaseRepository<AggregateResult> _repository;
+        readonly IConnection _connection;
 
         public AggregateRepository(IConnection connection)
         {
-            _repository = new BaseRepository<AggregateResult>(connection);
+            _connection = connection;
         }
 
-        public async Task<long?> GetAsync(SqlQuerySpec query, FeedOptions feedOptions = null)
+        public async Task<long?> GetAsync(QueryDefinition query, QueryRequestOptions requestOptions = null)
+        {
+            return await GetAsync(query.ToDynamicQuery(), requestOptions);
+        }
+
+        public async Task<long?> GetAsync(DynamicQuery query, QueryRequestOptions requestOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            var r = await _repository.GetAggregateHelperAsync(new SqlQuerySpecQuery<AggregateResult>(query), feedOptions).ConfigureAwait(false);
+            var r = await GetAggregateHelperAsync(query, requestOptions).ConfigureAwait(false);
 
             return r.Number;
         }
 
-        public async Task<long?> GetAsync(DynamicQuery query, FeedOptions feedOptions = null)
+        public async Task<long?> GetAsync(string query, object parameters, QueryRequestOptions requestOptions = null)
         {
             if (query == null)
                 throw new System.ArgumentNullException(nameof(query));
 
-            var r = await _repository.GetAggregateHelperAsync(query, feedOptions).ConfigureAwait(false);
+            var r = await GetAggregateHelperAsync(new DynamicQuery(query, parameters), requestOptions).ConfigureAwait(false);
 
             return r.Number;
         }
 
-        public async Task<long?> GetAsync(string query, object parameters, FeedOptions feedOptions = null)
+        async Task<AggregateResult> GetAggregateHelperAsync(DynamicQuery query, QueryRequestOptions requestOptions = null)
         {
-            if (query == null)
-                throw new System.ArgumentNullException(nameof(query));
+            var sq = query.ToQueryDefinition().ToSqlQuery();
+            var items = await _connection.QueryMoreItemsAsync<AggregateResult>(sq, requestOptions);
 
-            var r = await _repository.GetAggregateHelperAsync(new DynamicQuery<AggregateResult>(query, parameters), feedOptions).ConfigureAwait(false);
+            var result = new AggregateResult();
 
-            return r.Number;
-        }
+            if (items != null)
+            {
+                foreach (var ar in items)
+                {
+                    if (ar != null)
+                    {
+                        if (!result.Number.HasValue)
+                            result.Number = 0;
 
-        public long? Get(SqlQuerySpec query, FeedOptions feedOptions = null)
-        {
-            if (query == null)
-                throw new System.ArgumentNullException(nameof(query));
+                        result.Number += ar.Number;
+                    }
+                }
+            }
 
-            return AsyncTools.RunSync(() => GetAsync(query, feedOptions));
-        }
-
-        public long? Get(DynamicQuery query, FeedOptions feedOptions = null)
-        {
-            if (query == null)
-                throw new System.ArgumentNullException(nameof(query));
-
-            return AsyncTools.RunSync(() => GetAsync(query, feedOptions));
-        }
-
-        public long? Get(string sql, object parameters, FeedOptions feedOptions = null)
-        {
-            if (sql == null)
-                throw new System.ArgumentNullException(nameof(sql));
-
-            return AsyncTools.RunSync(() => GetAsync(new DynamicQuery<AggregateResult>(sql, parameters).ToSqlQuerySpec(), feedOptions));
+            return result;
         }
     }
 }

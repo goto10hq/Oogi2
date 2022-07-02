@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Oogi2;
@@ -14,18 +15,16 @@ namespace Tests
         [TestMethod]
         public void Classic()
         {
-            var q = new SqlQuerySpec("a = @a, b = @b, c = @c, d = @d, e = @e, f = @f, g = @g, h = @h",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@a", "!''!"),
-                    new SqlParameter("@b", 'x'),
-                    new SqlParameter("@c", null),
-                    new SqlParameter("@d", true),
-                    new SqlParameter("@e", 13),
-                    new SqlParameter("@f", 13.99),
-                    new SqlParameter("@g", Guid.Empty),
-                    new SqlParameter("@h", new Uri("https://www.goto10.cz"))
-                });
+            var q = new QueryDefinition("a = @a, b = @b, c = @c, d = @d, e = @e, f = @f, g = @g, h = @h")
+                    .WithParameter("@a", "!''!")
+                    .WithParameter("@b", 'x')
+                    .WithParameter("@c", null)
+                    .WithParameter("@d", true)
+                    .WithParameter("@e", 13)
+                    .WithParameter("@f", 13.99)
+                    .WithParameter("@g", Guid.Empty)
+                    .WithParameter("@h", new Uri("https://www.goto10.cz"));
+
 
             var sql = q.ToSqlQuery();
 
@@ -42,11 +41,7 @@ namespace Tests
         [TestMethod]
         public void Enum()
         {
-            var q = new SqlQuerySpec("state = @state",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@state", State.Processing),
-                });
+            var q = new QueryDefinition("state = @state").WithParameter("@state", State.Processing);
 
             var sql = q.ToSqlQuery();
 
@@ -56,12 +51,9 @@ namespace Tests
         [TestMethod]
         public void Stamps()
         {
-            var q = new SqlQuerySpec("epoch = @stamp, epoch2 in (@stamp2)",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@stamp", new Stamp(new DateTime(2000, 1, 1))),
-                    new SqlParameter("@stamp2", new SimpleStamp(new DateTime(2001, 1, 1))),
-                });
+            var q = new QueryDefinition("epoch = @stamp, epoch2 in (@stamp2)")
+                    .WithParameter("@stamp", new Stamp(new DateTime(2000, 1, 1)))
+                    .WithParameter("@stamp2", new SimpleStamp(new DateTime(2001, 1, 1)));
 
             var sql = q.ToSqlQuery();
 
@@ -73,11 +65,8 @@ namespace Tests
         {
             var ids = new List<int> { 4, 5, 2 };
 
-            var q = new SqlQuerySpec("items in @ids",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@ids", ids),
-                });
+            var q = new QueryDefinition("items in @ids")
+                .WithParameter("@ids", ids);
 
             var sql = q.ToSqlQuery();
 
@@ -89,11 +78,8 @@ namespace Tests
         {
             var ids = new List<string> { "abra", "ca", "da'bra" };
 
-            var q = new SqlQuerySpec("items in @ids",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@ids", ids),
-                });
+            var q = new QueryDefinition("items in @ids")
+                .WithParameter("@ids", ids);
 
             var sql = q.ToSqlQuery();
 
@@ -105,11 +91,8 @@ namespace Tests
         {
             var ids = new List<State> { State.Ready, State.Finished };
 
-            var q = new SqlQuerySpec("items in @ids",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@ids", ids),
-                });
+            var q = new QueryDefinition("items in @ids")
+                .WithParameter("@ids", ids);
 
             var sql = q.ToSqlQuery();
 
@@ -121,11 +104,8 @@ namespace Tests
         {
             var ids = new List<float> { 6.3f, 8.2f };
 
-            var q = new SqlQuerySpec("items in @ids",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@ids", ids),
-                });
+            var q = new QueryDefinition("items in @ids")
+                .WithParameter("@ids", ids);
 
             var sql = q.ToSqlQuery();
 
@@ -137,11 +117,8 @@ namespace Tests
         {
             var ids = new List<State>();
 
-            var q = new SqlQuerySpec("items in @ids",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@ids", ids),
-                });
+            var q = new QueryDefinition("items in @ids")
+                .WithParameter("@ids", ids);
 
             var sql = q.ToSqlQuery();
 
@@ -155,13 +132,10 @@ namespace Tests
             float? b = null;
             Guid? c = null;
 
-            var q = new SqlQuerySpec("a = @a, b = @b, c = @c",
-               new SqlParameterCollection
-               {
-                    new SqlParameter("@a", a),
-                    new SqlParameter("@b", b),
-                    new SqlParameter("@c", c)
-               });
+            var q = new QueryDefinition("a = @a, b = @b, c = @c")
+                .WithParameter("@a", a)
+                .WithParameter("@b", b)
+                .WithParameter("@c", c);
 
             var sql = q.ToSqlQuery();
 
@@ -171,14 +145,9 @@ namespace Tests
         [TestMethod]
         public void Escaping()
         {
-            var q = new SqlQuerySpec("select * from c where c.entity = @entity and c.message = @message")
-            {
-                Parameters = new SqlParameterCollection
-                                     {
-                                         new SqlParameter("@entity", Robot.Entity),
-                                         new SqlParameter("@message", @"\'\\''")
-                                     }
-            };
+            var q = new QueryDefinition("select * from c where c.entity = @entity and c.message = @message")
+                .WithParameter("@entity", Entities.Robot)
+                .WithParameter("@message", @"\'\\''");                                                 
 
             var sql = q.ToSqlQuery();
 

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Tests
 {
+    // SKIP THIS ONE
     //[TestClass]
     //public class ExternalDocument
     //{        

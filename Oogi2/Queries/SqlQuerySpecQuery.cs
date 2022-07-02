@@ -1,52 +1,38 @@
-﻿using Microsoft.Azure.Documents;
-using Oogi2.Attributes;
-using Sushi2;
+﻿using Microsoft.Azure.Cosmos;
+using Oogi2.Entities;
 
 namespace Oogi2.Queries
 {
-    public class SqlQuerySpecQuery<T> : IQuery where T : class
+    public class SqlQuerySpecQuery<T> : IQuery<T> where T : BaseEntity
     {
-        readonly SqlQuerySpec _sqlQuerySpec;
-        readonly string _entityName = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Name);
-        readonly string _entityValue = typeof(T).GetAttributeValue((EntityTypeAttribute a) => a.Value);
+        readonly QueryDefinition _queryDefinition;
+        const string EntityName = "entity";        
 
-        public SqlQuerySpecQuery(SqlQuerySpec sqlQuerySpec = null)
+        public SqlQuerySpecQuery(QueryDefinition queryDefinition = null)
         {
-            _sqlQuerySpec = sqlQuerySpec;
+            _queryDefinition = queryDefinition;
         }
 
-        public SqlQuerySpec ToSqlQuerySpec()
+        public QueryDefinition ToQueryDefinition(T item)
         {
-            return _sqlQuerySpec;
+            return _queryDefinition;
         }
 
-        public SqlQuerySpec ToGetFirstOrDefault()
+        public QueryDefinition ToGetFirstOrDefault(T item)
         {
-            if (_sqlQuerySpec == null)
-            {
-                if (_entityName == null)
-                    return new SqlQuerySpec("select top 1 * from c");
-
-                return new SqlQuerySpec($"select top 1 * from c where c[\"{_entityName}\"] = @entity",
-                    new SqlParameterCollection
-                    {
-                        new SqlParameter("@entity", _entityValue)
-                    });
+            if (_queryDefinition == null)
+            {                
+                return new QueryDefinition($"select top 1 * from c where c[\"{EntityName}\"] = @entity")
+                    .WithParameter("@entity", item.Entity);
             }
 
-            return _sqlQuerySpec;
+            return _queryDefinition;
         }
 
-        public SqlQuerySpec ToGetAll()
-        {
-            if (_entityName == null)
-                return new SqlQuerySpec("select * from c");
-
-            return new SqlQuerySpec($"select * from c where c[\"{_entityName}\"] = @entity",
-                new SqlParameterCollection
-                {
-                    new SqlParameter("@entity", _entityValue)
-                });
+        public QueryDefinition ToGetAll(T item)
+        {            
+            return new QueryDefinition($"select * from c where c[\"{EntityName}\"] = @entity")
+                .WithParameter("@entity", item.Entity);
         }
     }
 }
