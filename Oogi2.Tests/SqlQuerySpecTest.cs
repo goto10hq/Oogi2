@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Documents;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Oogi2;
 using Oogi2.Tests.Helpers;
@@ -147,7 +146,7 @@ namespace Tests
         {
             var q = new QueryDefinition("select * from c where c.entity = @entity and c.message = @message")
                 .WithParameter("@entity", Entities.Robot)
-                .WithParameter("@message", @"\'\\''");                                                 
+                .WithParameter("@message", @"\'\\''");
 
             var sql = q.ToSqlQuery();
 

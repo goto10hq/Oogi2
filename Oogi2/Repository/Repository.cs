@@ -24,9 +24,18 @@ namespace Oogi2
         /// </summary>
         /// <param name="query">Query.</param>        
         /// <returns>The first document.</returns>
-        public Task<T> GetFirstOrDefaultAsync(QueryDefinition query = null)
+        public Task<T> GetFirstOrDefaultAsync(QueryDefinition query)
         {
-            return _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<T>(query));
+            return _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery(query));
+        }
+
+        /// <summary>
+        /// Gets the first or default document.
+        /// </summary>        
+        /// <returns>The first document.</returns>
+        public Task<T> GetFirstOrDefaultAsync()
+        {
+            return _repository.GetFirstOrDefaultHelperAsync(new SqlQuerySpecQuery<T>(null));
         }
 
         /// <summary>
@@ -34,7 +43,7 @@ namespace Oogi2
         /// </summary>
         /// <param name="query">Query.</param>        
         /// <returns>The first document.</returns>
-        public Task<T> GetFirstOrDefaultAsync(DynamicQuery<T> query)
+        public Task<T> GetFirstOrDefaultAsync(DynamicQuery query)
         {
             return _repository.GetFirstOrDefaultHelperAsync(query);
         }
@@ -47,17 +56,19 @@ namespace Oogi2
         /// <returns>The first document.</returns>
         public Task<T> GetFirstOrDefaultAsync(string query, object parameters)
         {
-            return _repository.GetFirstOrDefaultHelperAsync(new DynamicQuery<T>(query, parameters));
+            IQuery<T> q = new DynamicQuery<T>(query, parameters);
+            return _repository.GetFirstOrDefaultHelperAsync(q);
         }
 
         /// <summary>
         /// Gets the first or default document.
         /// </summary>
         /// <param name="id">The id of the document.</param>        
+        /// <param name="partitionKey">Partition key.</param>
         /// <returns>The first document.</returns>
-        public Task<T> GetFirstOrDefaultAsync(string id)
+        public Task<T> GetFirstOrDefaultAsync(string id, string partitiokKey = null)
         {
-            return _repository.GetFirstOrDefaultHelperAsync(new IdQuery<T>(id));
+            return _repository.GetFirstOrDefaultHelperAsync(new IdQuery<T>(id, partitiokKey));
         }
 
         /// <summary>
@@ -95,11 +106,12 @@ namespace Oogi2
         /// <summary>
         /// Delete the specified id.
         /// </summary>
-        /// <param name="id">The id of the document.</param>        
+        /// <param name="id">The id of the document.</param>       
+        /// <param name="partitionKey">Partition key.</param>
         /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
-        public Task<bool> DeleteAsync(string id)
+        public Task<bool> DeleteAsync(string id, string partitionKey = null)
         {
-            return _repository.DeleteDocumentAsync(id);
+            return _repository.DeleteDocumentAsync(id, partitionKey);
         }
 
         /// <summary>

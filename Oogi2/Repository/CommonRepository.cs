@@ -103,9 +103,9 @@ namespace Oogi2
         /// </summary>
         /// <param name="id">The id of the document.</param>        
         /// <returns><c>true</c> if document has been deleted; otherwise, <c>false</c>.</returns>
-        public async Task<bool> DeleteAsync(string id)
+        public async Task<bool> DeleteAsync(string id, string partitionKey = null)
         {
-            return await _connection.DeleteItemAsync(id);
+            return await _connection.DeleteItemAsync<dynamic>(id, partitionKey);
         }
 
         /// <summary>

@@ -1,25 +1,20 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Oogi2.Entities;
+using System;
+using System.Collections.Generic;
 
 namespace Oogi2.Queries
 {
     public class DynamicQuery<T> : IQuery, IQuery<T> where T : BaseEntity
     {
-        readonly object _parameters;
-        readonly string _sql;
         const string EntityName = "entity";
 
-        QueryDefinition _sqlQuerySpec;
-        QueryDefinition SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
-
-        public DynamicQuery()
-        {
-        }
+        readonly QueryDefinition _sqlQuerySpec;
+        QueryDefinition SqlQuerySpec => _sqlQuerySpec;
 
         public DynamicQuery(string sql, object parameters = null)
         {
-            _sql = sql;
-            _parameters = parameters;
+            _sqlQuerySpec = ConvertToSqlQuerySpec(sql, parameters);
         }
 
         static QueryDefinition ConvertToSqlQuerySpec(string sql, object parameters)
@@ -32,25 +27,36 @@ namespace Oogi2.Queries
             if (parameters == null)
                 return sqlqs;
 
-            var sqlParameters = Tools.AnonymousObjectToSqlParameters(parameters);
-
-            if (sqlParameters == null)
-                return sqlqs;
-
-            var result = new QueryDefinition(sqlqs.QueryText);
-
-            foreach (var (Name, Value) in sqlParameters)
+            var pc = parameters as IReadOnlyList<(string Name, object Value)>;
+            
+            if (pc != null)
             {
-                result = result.WithParameter(Name, Value);
+                var result = new QueryDefinition(sqlqs.QueryText);
+
+                foreach (var p in pc)
+                    result = result.WithParameter(p.Name, p.Value);
+
+                return result;
             }
+            else
+            {
+                var sqlParameters = Tools.AnonymousObjectToSqlParameters(parameters);
 
-            return result;
+                if (sqlParameters == null)
+                    return sqlqs;
+
+                var result = new QueryDefinition(sqlqs.QueryText);
+
+                foreach (var (Name, Value) in sqlParameters)
+                {
+                    result = result.WithParameter("@" + Name, Value);
+                }
+
+                return result;
+            }            
         }
 
-        public QueryDefinition ToQueryDefinition(T item)
-        {
-            return SqlQuerySpec;
-        }
+        public QueryDefinition ToQueryDefinition(T item) => SqlQuerySpec;
 
         public QueryDefinition ToGetFirstOrDefault(T item)
         {
@@ -61,7 +67,7 @@ namespace Oogi2.Queries
             }
 
             return SqlQuerySpec;
-        }
+        }        
 
         public QueryDefinition ToGetAll(T item)
         {
@@ -73,24 +79,21 @@ namespace Oogi2.Queries
         {
             return SqlQuerySpec;
         }
+
+        public QueryDefinition ToGetFirstOrDefault()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class DynamicQuery : IQuery
-    {
-        readonly object _parameters;
-        readonly string _sql;
-
+    {        
         QueryDefinition _sqlQuerySpec;
-        QueryDefinition SqlQuerySpec => _sqlQuerySpec ?? (_sqlQuerySpec = ConvertToSqlQuerySpec(_sql, _parameters));
-
-        public DynamicQuery()
-        {
-        }
+        QueryDefinition SqlQuerySpec => _sqlQuerySpec;
 
         public DynamicQuery(string sql, object parameters = null)
-        {
-            _sql = sql;
-            _parameters = parameters;
+        {            
+            _sqlQuerySpec = ConvertToSqlQuerySpec(sql, parameters);
         }
 
         static QueryDefinition ConvertToSqlQuerySpec(string sql, object parameters)
@@ -103,19 +106,33 @@ namespace Oogi2.Queries
             if (parameters == null)
                 return sqlqs;
 
-            var sqlParameters = Tools.AnonymousObjectToSqlParameters(parameters);
+            var pc = parameters as IReadOnlyList<(string Name, object Value)>;
 
-            if (sqlParameters == null)
-                return sqlqs;
-
-            var result = new QueryDefinition(sql);
-
-            foreach (var (Name, Value) in sqlParameters)
+            if (pc != null)
             {
-                result = result.WithParameter(Name, Value);
-            }
+                var result = new QueryDefinition(sqlqs.QueryText);
 
-            return result;
+                foreach (var p in pc)
+                    result = result.WithParameter(p.Name, p.Value);
+
+                return result;
+            }
+            else
+            {
+                var sqlParameters = Tools.AnonymousObjectToSqlParameters(parameters);
+
+                if (sqlParameters == null)
+                    return sqlqs;
+
+                var result = new QueryDefinition(sqlqs.QueryText);
+
+                foreach (var (Name, Value) in sqlParameters)
+                {
+                    result = result.WithParameter("@" + Name, Value);
+                }
+
+                return result;
+            }
         }
 
         public QueryDefinition ToQueryDefinition()

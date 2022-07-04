@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Oogi2.Entities;
@@ -15,49 +16,46 @@ namespace Oogi2
             _connection = connection;
         }
 
-        internal async Task<T> GetFirstOrDefaultHelperAsync(IQuery<T> query = null)
+        internal async Task<T> GetFirstOrDefaultHelperAsync()
         {
-            QueryDefinition sqlq;
-
-            if (query == null)
-            {
-                var qq = new SqlQuerySpecQuery<T>();
-                sqlq = qq.ToGetFirstOrDefault(new T());
-            }
-            else
-            {
-                sqlq = query.ToGetFirstOrDefault(new T());
-            }
-
+            var qq = new SqlQuerySpecQuery<T>();
+            var sqlq = qq.ToGetFirstOrDefault(new T());            
             var sq = sqlq.ToSqlQuery();
 
             return await _connection.QueryOneItemAsync<T>(sq);
         }
 
-        internal async Task<T> CreateDocumentAsync(T entity)
+        internal async Task<T> GetFirstOrDefaultHelperAsync(IQuery query)
         {
-            return await _connection.CreateItemAsync(entity).ConfigureAwait(false);
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            QueryDefinition sqlq = query.ToGetFirstOrDefault();            
+            var sq = sqlq.ToSqlQuery();
+
+            return await _connection.QueryOneItemAsync<T>(sq);
         }
 
-        internal async Task<T> ReplaceDocumentAsync(T entity)
+        internal async Task<T> GetFirstOrDefaultHelperAsync(IQuery<T> query)
         {
-            return await _connection.ReplaceItemAsync(entity).ConfigureAwait(false);
+            if (query == null)
+                throw new ArgumentNullException(nameof(query));
+
+            QueryDefinition sqlq = query.ToGetFirstOrDefault(new T());
+            var sq = sqlq.ToSqlQuery();
+
+            return await _connection.QueryOneItemAsync<T>(sq);
         }
 
-        internal async Task<T> UpsertDocumentAsync(T entity)
-        {
-            return await _connection.UpsertItemAsync(entity).ConfigureAwait(false);
-        }
+        internal Task<T> CreateDocumentAsync(T entity) => _connection.CreateItemAsync(entity);
 
-        internal async Task<bool> DeleteDocumentAsync(T entity)
-        {
-            return await _connection.DeleteItemAsync(entity).ConfigureAwait(false);
-        }
+        internal Task<T> ReplaceDocumentAsync(T entity) => _connection.ReplaceItemAsync(entity);
 
-        internal async Task<bool> DeleteDocumentAsync(string id)
-        {
-            return await _connection.DeleteItemAsync<T>(id).ConfigureAwait(false);
-        }
+        internal Task<T> UpsertDocumentAsync(T entity) => _connection.UpsertItemAsync(entity);
+
+        internal Task<bool> DeleteDocumentAsync(T entity) => _connection.DeleteItemAsync(entity);
+
+        internal Task<bool> DeleteDocumentAsync(string id, string partitionKey = null) => _connection.DeleteItemAsync<dynamic>(id, partitionKey);
 
         public Task<List<T>> GetListHelperAsync(IQuery query, QueryRequestOptions requestOptions)
         {

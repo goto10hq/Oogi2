@@ -33,6 +33,6 @@ namespace Oogi2
         Task<T> CreateItemAsync<T>(T item);
         Task<T> ReplaceItemAsync<T>(T item);
         Task<bool> DeleteItemAsync<T>(T item);
-        Task<bool> DeleteItemAsync<T>(string id);
+        Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null);
     }
 }

@@ -10,6 +10,7 @@ using static Oogi2.Tests.Helpers.Enums;
 using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Newtonsoft.Json.Linq;
 
 namespace Tests
 {
@@ -24,7 +25,7 @@ namespace Tests
 
         readonly List<Robot> _robots = new List<Robot>
             {
-            new Robot("Alfred", 100, true, new List<string> { "CPU", "Laser" }, State.Ready),
+            new Robot("Alfred", 100, true, new List<string> { "CPU", "Laser" }, State.Ready) { Id = "12d8bfe4-498f-432d-862b-425b0843509c" },
             new Robot("Nausica", 220, true, new List<string> { "CPU", "Bio scanner", "DSP" }, State.Sleeping),
             new Robot("Kosuna", 190, false, new List<string>(), State.Ready) { Message = @"\'\\''" }
             };
@@ -46,20 +47,26 @@ namespace Tests
             _aggregate = new AggregateRepository(_con);
             _dynamic = new CommonRepository<dynamic>(_con);
 
-            foreach (var robot in _robots.Take(_robots.Count - 1))
-                await _repo.CreateAsync(robot);
+            await DeleteRobots();
 
-            foreach (var robot in _robots.TakeLast(1))
-                await _repo.UpsertAsync(robot);
+            foreach (var robot in _robots)
+                await _repo.UpsertAsync(robot);            
         }
 
         [TestCleanup]
         public async Task DeleteRobots()
         {
-            if (_con.ContainerId.Equals("hub", StringComparison.OrdinalIgnoreCase))
-                throw new Exception("Hub cannot be deleted.");
+            //if (_con.ContainerId.Equals("hub", StringComparison.OrdinalIgnoreCase))
+            //    throw new Exception("Hub cannot be deleted.");
 
-            await _con.DeleteContainerAsync();
+            //await _con.DeleteContainerAsync();
+
+            var robots = await _repo.GetAllAsync();
+
+            foreach(var r in robots)
+            {
+                await _repo.DeleteAsync(r);
+            }
         }
 
         [TestMethod]
@@ -103,7 +110,7 @@ namespace Tests
         [TestMethod]
         public async Task SelectByMoreEnumsAsFirstOrDefault()
         {
-            var q = new DynamicQuery<Robot>("select * from c where c.entity = @entity and c.state in @states",
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
                 new
                 {
                     entity = Entities.Robot,
@@ -118,7 +125,7 @@ namespace Tests
         [TestMethod]
         public async Task SelectByMoreEnumsAsFirstOrDefaultWithNoResult()
         {
-            var q = new DynamicQuery<Robot>("select * from c where c.entity = @entity and c.state in @states",
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.state in @states",
                 new
                 {
                     entity = Entities.Robot,
@@ -197,7 +204,7 @@ namespace Tests
             Assert.AreNotEqual(robot, null);
             Assert.AreEqual(100, robot.ArtificialIq);
 
-            var q = new DynamicQuery<Robot>("select * from c where c.entity = @entity and c.artificialIq = @iq",
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.artificialIq = @iq",
                 new
                 {
                     entity = Entities.Robot,
@@ -226,13 +233,15 @@ namespace Tests
             Assert.AreEqual(fakeRobot.Id, (await _fakeRepo.GetFirstOrDefaultAsync(fakeRobot.Id)).Id);
             Assert.IsNull((await _repo.GetFirstOrDefaultAsync(fakeRobot.Id)));
 
-            Assert.AreEqual(fakeRobot.Id, (await _dynamic.GetFirstOrDefaultAsync(fakeRobot.Id)).id);
+            var d = await _dynamic.GetFirstOrDefaultAsync(fakeRobot.Id);
+            
+            Assert.AreEqual(fakeRobot.Id, ((JObject)d).SelectToken("id"));
         }
 
         [TestMethod]
         public async Task SelectEscapedAsync()
         {
-            var q = new DynamicQuery<Robot>("select * from c where c.entity = @entity and c.message = @message",
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.message = @message",
                 new
                 {
                     entity = Entities.Robot,
@@ -254,7 +263,7 @@ namespace Tests
         [TestMethod]
         public async Task SelectEscaped()
         {
-            var q = new DynamicQuery<Robot>("select * from c where c.entity = @entity and c.message = @message",
+            var q = new DynamicQuery("select * from c where c.entity = @entity and c.message = @message",
                 new
                 {
                     entity = Entities.Robot,
@@ -267,7 +276,7 @@ namespace Tests
             Assert.AreNotEqual(robot, null);
 
             var oldId = robot.Id;
-            robot = await _repo.GetFirstOrDefaultAsync(oldId);
+            robot = await _repo.GetFirstOrDefaultAsync(oldId, "oogi2");
 
             Assert.AreNotEqual(robot, null);
             Assert.AreEqual(robot.Id, oldId);
@@ -282,7 +291,7 @@ namespace Tests
 
             var dumbestRobotId = robots[0].Id;
 
-            await _repo.DeleteAsync(dumbestRobotId);
+            await _repo.DeleteAsync(dumbestRobotId, "oogi2");
 
             var smartestRobot = robots[robots.Count - 1];
 
@@ -298,19 +307,33 @@ namespace Tests
         public async Task CreateDynamic()
         {
             var repo = new CommonRepository<dynamic>(_con);
-            await repo.CreateAsync(new { Movie = "Donkey Kong Jr.", Rating = 3 });
-            await repo.CreateAsync(new { Movie = "King Kong", Rating = 2 });
-            await repo.CreateAsync(new { Movie = "Donkey Kong", Rating = 1 });
+            
+            var d1 = await repo.CreateAsync(new { Id = (string)null, Movie = "Donkey Kong Jr.", Rating = 3, PartitionKey = "oogi2", Entity = "movie" });            
+            Assert.IsNotNull(((JObject)d1).SelectToken("id"));
+            Assert.AreEqual("Donkey Kong Jr.", ((JObject)d1).SelectToken("movie"));
 
-            var movies = await repo.GetListAsync("select * from c where c.rating <> null", null);
+            var d2 = await repo.CreateAsync(new { Movie = "King Kong", Rating = 2, PartitionKey = "oogi2", Entity = "movie" });
+            Assert.IsNotNull(((JObject)d2).SelectToken("id"));
+            Assert.AreEqual("King Kong", ((JObject)d2).SelectToken("movie"));
 
+            var d3 = await repo.CreateAsync(new { Id = "3a80fdb6-6f34-4ac7-a4d0-df96592e6eda", Movie = "Donkey Kong", Rating = 1, PartitionKey = "oogi2", Entity = "movie" });
+            Assert.IsNotNull(((JObject)d3).SelectToken("id"));
+            Assert.AreEqual("3a80fdb6-6f34-4ac7-a4d0-df96592e6eda", ((JObject)d3).SelectToken("id"));
+
+            var movies = await repo.GetListAsync("select * from c where c.entity = 'movie' and c.rating <> null", null);
             Assert.AreEqual(3, movies.Count);
 
-            await repo.DeleteAsync(movies[0]);
-
-            movies = await repo.GetListAsync("select * from c where c.rating <> null", null);
-
+            await repo.DeleteAsync(new { Id = ((JObject)d1).SelectToken("id"), PartitionKey = "oogi2" });
+            movies = await repo.GetListAsync("select * from c where c.entity = 'movie' and c.rating <> null", null);
             Assert.AreEqual(2, movies.Count);
+
+            await repo.DeleteAsync(new { Id = ((JObject)d2).SelectToken("id"), PartitionKey = "oogi2" });
+            movies = await repo.GetListAsync("select * from c where c.entity = 'movie' and c.rating <> null", null);
+            Assert.AreEqual(1, movies.Count);
+
+            await repo.DeleteAsync("3a80fdb6-6f34-4ac7-a4d0-df96592e6eda", "oogi2");
+            movies = await repo.GetListAsync("select * from c where c.entity = 'movie' and c.rating <> null", null);
+            Assert.AreEqual(0, movies.Count);
         }
 
         // [TestMethod]

@@ -9,6 +9,10 @@ using System.IO;
 using System.Text;
 using Oogi2.Exceptions;
 using System.Reflection;
+using Sushi2;
+using Oogi2.Entities;
+using System.Dynamic;
+using Library.Helpers;
 
 namespace Oogi2
 {
@@ -71,7 +75,9 @@ namespace Oogi2
             Database = Client.GetDatabase(database);
 
             if (PartitionKey != PartitionKey.None)
-                Database.CreateContainerIfNotExistsAsync(container, partitionKey).Wait();
+            {
+                AsyncTools.RunSync(() => Database.CreateContainerIfNotExistsAsync(container, partitionKey));
+            }
 
             Container = Client.GetContainer(database, container);
         }
@@ -116,21 +122,21 @@ namespace Oogi2
             return default;
         }
 
-        public async Task<bool> DeleteContainerAsync()
+        //public async Task<bool> DeleteContainerAsync()
+        //{
+        //    var responseMessage = await Container.DeleteContainerAsync();
+
+        //    if (responseMessage.StatusCode != HttpStatusCode.NoContent)
+        //        throw new OogiException($"DeleteContainerAsync failed with status code {responseMessage.StatusCode}.");
+
+        //    return true;
+        //}
+
+        public async Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null)
         {
-            var responseMessage = await Container.DeleteContainerAsync();
+            var responseMessage = await Container.DeleteItemAsync<T>(id, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey));
 
-            if (responseMessage.StatusCode != HttpStatusCode.OK)
-                throw new OogiException($"DeleteContainerAsync failed with status code {responseMessage.StatusCode}.");
-
-            return true;
-        }
-
-        public async Task<bool> DeleteItemAsync<T>(string id)
-        {
-            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey);
-
-            if (responseMessage.StatusCode != HttpStatusCode.OK)
+            if (responseMessage.StatusCode != HttpStatusCode.NoContent)
                 throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
 
             return true;
@@ -139,12 +145,24 @@ namespace Oogi2
         public async Task<bool> DeleteItemAsync<T>(T item)
         {
             var id = GetId(item);
-            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey);
+            string partitionKey = null;
 
-            if (responseMessage.StatusCode != HttpStatusCode.OK)
+            if (PartitionKey != PartitionKey.None)
+            {
+                var be = item as BaseEntity;
+
+                if (be != null)             
+                    partitionKey = be.PartitionKey;                
+                else                
+                    partitionKey = GetPartitionKey(item);                
+            }
+            
+            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey));
+
+            if (responseMessage.StatusCode != HttpStatusCode.NoContent)
                 throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
 
-            return true;
+            return true;            
         }
 
         public async Task<T> UpsertItemAsync<T>(T item)
@@ -153,7 +171,7 @@ namespace Oogi2
 
             var responseMessage = await Container.UpsertItemAsync<T>(item);
 
-            if (responseMessage.StatusCode != HttpStatusCode.OK)
+            if (responseMessage.StatusCode != HttpStatusCode.Created)
                 throw new OogiException($"UpsertItemAsync failed with status code {responseMessage.StatusCode}.");
 
             return responseMessage.Resource;
@@ -161,19 +179,30 @@ namespace Oogi2
 
         public async Task<T> CreateItemAsync<T>(T item)
         {
-            SetId(item);
+            if (!SetId(item))
+            {
+                var d = SetIdToDynamic(item);
+                
+                var responseMessageD = await Container.CreateItemAsync<T>(d);
 
-            var responseMessage = await Container.CreateItemAsync<T>(item);
+                if (responseMessageD.StatusCode != HttpStatusCode.Created)
+                    throw new OogiException($"CreateItemAsync failed with status code {responseMessageD.StatusCode}.");
+
+                return responseMessageD.Resource;
+            }                                  
+
+            var responseMessage = await Container.CreateItemAsync(item);
 
             if (responseMessage.StatusCode != HttpStatusCode.Created)
                 throw new OogiException($"CreateItemAsync failed with status code {responseMessage.StatusCode}.");
 
-            return responseMessage.Resource;         
+            return responseMessage.Resource;
         }
 
         public async Task<T> ReplaceItemAsync<T>(T item)
         {
             var id = GetId(item);
+            
             var responseMessage = await Container.ReplaceItemAsync<T>(item, id);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
@@ -200,7 +229,7 @@ namespace Oogi2
             return results;
         }
 
-        internal static void SetId<T>(T entity)
+        internal static bool SetId<T>(T entity)
         {
             PropertyInfo propInfoId = typeof(T).GetProperty("Id");
 
@@ -208,7 +237,11 @@ namespace Oogi2
             {
                 if (propInfoId.GetValue(entity) == null)
                     propInfoId.SetValue(entity, Guid.NewGuid().ToString());
+
+                return true;
             }
+
+            return false;
         }
 
         internal static string GetId<T>(T entity)
@@ -220,9 +253,63 @@ namespace Oogi2
                 return propInfoId.GetValue(entity).ToString();
             }
             else
-            {
-                throw new OogiException($"Entity {typeof(T)} has got no property named Id.");
+            {                
+                foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(entity.GetType()))
+                {
+                    if (property.Name == "Id")
+                    {
+                        return property.GetValue(entity)?.ToString();                        
+                    }                    
+                }
+
+                return null;
             }
+        }
+
+        internal static string GetPartitionKey<T>(T entity)
+        {
+            PropertyInfo propInfoPartitionKey = typeof(T).GetProperty("PartitionKey");
+
+            if (propInfoPartitionKey != null)
+            {
+                return propInfoPartitionKey.GetValue(entity)?.ToString();
+            }
+            else
+            {
+                foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(entity.GetType()))
+                {
+                    if (property.Name == "PartitionKey")
+                    {
+                        return property.GetValue(entity)?.ToString();
+                    }
+                }
+
+                return null;
+            }            
+        }
+
+        internal static dynamic SetIdToDynamic(object value)
+        {
+            IDictionary<string, object> expando = new ExpandoObject();
+
+            foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(value.GetType()))
+            {
+                if (property.Name == "Id")
+                {
+                    if (property.GetValue(value) == null)
+                    {
+                        expando.Add("Id", Guid.NewGuid());
+                        continue;
+                    }                    
+                }
+
+                expando.Add(property.Name, property.GetValue(value));
+            }
+
+            if (expando.Keys.All(x => x != "Id"))
+                expando.Add("Id", Guid.NewGuid());
+
+            return expando as ExpandoObject;
         }
     }
 }

@@ -19,7 +19,7 @@ namespace Oogi2.Tests.Helpers
         [JsonProperty("_etag")]
         public string ETag { get; set; }
 
-        public override string PartitionKey => "oogi2";
+        public override string PartitionKey => "fakeoogi2";
 
         public override string Entity => Entities.FakeRobot;
 

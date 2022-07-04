@@ -13,10 +13,9 @@ namespace Oogi2.Queries
             _queryDefinition = queryDefinition;
         }
 
-        public QueryDefinition ToQueryDefinition(T item)
-        {
-            return _queryDefinition;
-        }
+        public QueryDefinition ToQueryDefinition(T item) => _queryDefinition;
+
+        public QueryDefinition ToGetFirstOrDefault() => _queryDefinition;
 
         public QueryDefinition ToGetFirstOrDefault(T item)
         {
@@ -34,5 +33,22 @@ namespace Oogi2.Queries
             return new QueryDefinition($"select * from c where c[\"{EntityName}\"] = @entity")
                 .WithParameter("@entity", item.Entity);
         }
+    }
+
+    public class SqlQuerySpecQuery : IQuery 
+    {
+        readonly QueryDefinition _queryDefinition;        
+
+        public SqlQuerySpecQuery(QueryDefinition queryDefinition = null)
+        {
+            _queryDefinition = queryDefinition;
+        }
+
+        public QueryDefinition ToQueryDefinition() => _queryDefinition;
+
+        public QueryDefinition ToGetFirstOrDefault() => _queryDefinition;
+
+        public QueryDefinition ToGetAll() => _queryDefinition;
+
     }
 }
