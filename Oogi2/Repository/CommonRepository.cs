@@ -141,6 +141,6 @@ namespace Oogi2
         {
             var sq = new DynamicQuery(query, parameters).ToQueryDefinition().ToSqlQuery();
             return await _connection.QueryMoreItemsAsync<T>(sq, requestOptions);
-        }        
+        }
     }
 }

@@ -35,6 +35,8 @@ namespace Oogi2
         Task<T> ReplaceItemAsync<T>(T item);
         Task<bool> DeleteItemAsync<T>(T item);
         Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null);
+        Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches);
+        Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches);
         Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations);
     }
 }

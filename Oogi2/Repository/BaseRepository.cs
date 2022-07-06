@@ -48,15 +48,15 @@ namespace Oogi2
             return await _connection.QueryOneItemAsync<T>(sq);
         }
 
-        internal Task<T> CreateDocumentAsync(T entity) => _connection.CreateItemAsync(entity);
+        internal Task<T> CreateItemAsync(T entity) => _connection.CreateItemAsync(entity);
 
-        internal Task<T> ReplaceDocumentAsync(T entity) => _connection.ReplaceItemAsync(entity);
+        internal Task<T> ReplaceItemAsync(T entity) => _connection.ReplaceItemAsync(entity);
 
-        internal Task<T> UpsertDocumentAsync(T entity) => _connection.UpsertItemAsync(entity);
+        internal Task<T> UpsertItemAsync(T entity) => _connection.UpsertItemAsync(entity);
 
-        internal Task<bool> DeleteDocumentAsync(T entity) => _connection.DeleteItemAsync(entity);
+        internal Task<bool> DeleteItemAsync(T entity) => _connection.DeleteItemAsync(entity);
 
-        internal Task<bool> DeleteDocumentAsync(string id, string partitionKey = null) => _connection.DeleteItemAsync<dynamic>(id, partitionKey);
+        internal Task<bool> DeleteItemAsync(string id, string partitionKey = null) => _connection.DeleteItemAsync<dynamic>(id, partitionKey);
 
         public Task<List<T>> GetListHelperAsync(IQuery query, QueryRequestOptions requestOptions)
         {
@@ -70,9 +70,12 @@ namespace Oogi2
             return _connection.QueryMoreItemsAsync<T>(sq, requestOptions);
         }
 
-        internal Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations)
-        {
-            return _connection.ProcessBulkOperationsAsync<T>(bulkOperations);
-        }
+        internal Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _connection.ProcessBulkOperationsAsync<T>(bulkOperations);
+
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches) => _connection.PatchItemAsync<T>(id, partitionKey, patches);
+        
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches) => _connection.PatchItemAsync<T>(id, null, patches);        
+
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches) => _connection.PatchItemAsync(entity, patches);        
     }
 }

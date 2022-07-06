@@ -338,7 +338,7 @@ namespace Tests
         }
 
         [TestMethod]
-        public async Task BulkInsert()
+        public async Task Bulk()
         {
             var appSettings = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -385,6 +385,16 @@ namespace Tests
             results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
             Assert.AreEqual(results.SuccessfulItems, 3);
 
+            bulkOperations = new List<BulkOperation<FakeRobot>>();
+
+            foreach (var r in robots)
+            {                
+                bulkOperations.Add(new BulkOperation<FakeRobot>(bulkRepo.PatchAsync(r, new List<PatchOperation> { PatchOperation.Increment("/artificialIq", 100) }), r));
+            }
+
+            results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
+            Assert.AreEqual(results.SuccessfulItems, 3);
+
             robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
 
             counter = -1;
@@ -392,7 +402,7 @@ namespace Tests
             foreach (var r in robots)
             {
                 counter++;
-                Assert.IsTrue(r.ArtificialIq == 200 + (counter));
+                Assert.IsTrue(r.ArtificialIq == 300 + (counter));
                 Assert.AreEqual($"X{counter}", r.Name);                
             }
 
@@ -426,6 +436,35 @@ namespace Tests
             robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();            
 
             Assert.AreEqual(robots.Count(), 0);
+        }
+
+        [TestMethod]
+        public async Task Patch()
+        {
+            var r = await _repo.GetFirstOrDefaultAsync("12d8bfe4-498f-432d-862b-425b0843509c");
+            Assert.AreEqual(100, r.ArtificialIq);
+            var r2 = await _repo.PatchAsync(r, new List<PatchOperation>
+            {
+                PatchOperation.Replace("/artificialIq", 199)
+            });
+
+            Assert.AreEqual(199, r2.ArtificialIq);
+            r = await _repo.GetFirstOrDefaultAsync("12d8bfe4-498f-432d-862b-425b0843509c");
+            Assert.AreEqual(199, r.ArtificialIq);
+
+            await _repo.PatchAsync("12d8bfe4-498f-432d-862b-425b0843509c", "oogi2", new List<PatchOperation>
+            {
+                PatchOperation.Replace("/artificialIq", 100),
+                PatchOperation.Set("/message", "yikes"),
+                PatchOperation.Add("/parts/2", "Bubblegum")
+            });
+
+            r = await _repo.GetFirstOrDefaultAsync("12d8bfe4-498f-432d-862b-425b0843509c");
+            Assert.AreEqual(100, r.ArtificialIq);
+            Assert.AreEqual("yikes", r.Message);
+            Assert.AreEqual(3, r.Parts.Count());
+
+            await _repo.ReplaceAsync(new Robot("Alfred", 100, true, new List<string> { "CPU", "Laser" }, State.Ready) { Id = "12d8bfe4-498f-432d-862b-425b0843509c" });
         }
 
         // [TestMethod]

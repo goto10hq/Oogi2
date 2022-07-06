@@ -51,15 +51,15 @@ namespace Oogi2
         {
             Tools.SetJsonDefaultSettings();
         }
-        
-        public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey, bool allowBulkExecution) : this(endpoint, authorizationKey, database, container, partitionKey, new CosmosClientOptions 
+
+        public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey, bool allowBulkExecution) : this(endpoint, authorizationKey, database, container, partitionKey, new CosmosClientOptions
         {
             Serializer = new CustomSerializer(),
             AllowBulkExecution = allowBulkExecution
         })
-        {            
+        {
         }
-        
+
         public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey = null, CosmosClientOptions options = null)
         {
             CosmosClientOptions clientOptions = options ?? new CosmosClientOptions()
@@ -154,13 +154,44 @@ namespace Oogi2
                 else
                     partitionKey = GetPartitionKey(item);
             }
-            
+
             var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey));
 
             if (responseMessage.StatusCode != HttpStatusCode.NoContent)
                 throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
 
-            return true;            
+            return true;
+        }
+
+        public async Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches)
+        {
+            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches);
+
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"PatchItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return responseMessage.Resource;
+        }
+
+        public async Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches)
+        {
+            var id = GetId(item);
+            string partitionKey = null;
+
+            if (PartitionKey != PartitionKey.None)
+            {
+                if (item is BaseEntity be)
+                    partitionKey = be.PartitionKey;
+                else
+                    partitionKey = GetPartitionKey(item);
+            }
+
+            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches);
+
+            if (responseMessage.StatusCode != HttpStatusCode.OK)
+                throw new OogiException($"PatchItemAsync failed with status code {responseMessage.StatusCode}.");
+
+            return responseMessage.Resource;
         }
 
         public async Task<T> UpsertItemAsync<T>(T item)
@@ -180,14 +211,14 @@ namespace Oogi2
             if (!SetId(item))
             {
                 var d = SetIdToDynamic(item);
-                
+
                 var responseMessageD = await Container.CreateItemAsync<T>(d);
 
                 if (responseMessageD.StatusCode != HttpStatusCode.Created)
                     throw new OogiException($"CreateItemAsync failed with status code {responseMessageD.StatusCode}.");
 
                 return responseMessageD.Resource;
-            }                                  
+            }
 
             var responseMessage = await Container.CreateItemAsync(item);
 
@@ -200,7 +231,7 @@ namespace Oogi2
         public async Task<T> ReplaceItemAsync<T>(T item)
         {
             var id = GetId(item);
-            
+
             var responseMessage = await Container.ReplaceItemAsync<T>(item, id);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
@@ -225,7 +256,7 @@ namespace Oogi2
             }
 
             return results;
-        }        
+        }
 
         internal static bool SetId<T>(T entity)
         {
@@ -251,13 +282,13 @@ namespace Oogi2
                 return propInfoId.GetValue(entity).ToString();
             }
             else
-            {                
+            {
                 foreach (System.ComponentModel.PropertyDescriptor property in System.ComponentModel.TypeDescriptor.GetProperties(entity.GetType()))
                 {
                     if (property.Name == "Id")
                     {
-                        return property.GetValue(entity)?.ToString();                        
-                    }                    
+                        return property.GetValue(entity)?.ToString();
+                    }
                 }
 
                 return null;
@@ -283,7 +314,7 @@ namespace Oogi2
                 }
 
                 return null;
-            }            
+            }
         }
 
         internal static dynamic SetIdToDynamic(object value)
@@ -298,7 +329,7 @@ namespace Oogi2
                     {
                         expando.Add("Id", Guid.NewGuid());
                         continue;
-                    }                    
+                    }
                 }
 
                 expando.Add(property.Name, property.GetValue(value));
@@ -314,7 +345,7 @@ namespace Oogi2
         {
             BulkOperations<T> bo = new BulkOperations<T>(bulkOperations.Count());
 
-            foreach(var op in bulkOperations)
+            foreach (var op in bulkOperations)
             {
                 bo.Tasks.Add(BulkSupport.Helpers.CaptureOperationResponse(op.Operation, op.Item));
             }
