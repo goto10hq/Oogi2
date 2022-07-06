@@ -467,6 +467,42 @@ namespace Tests
             await _repo.ReplaceAsync(new Robot("Alfred", 100, true, new List<string> { "CPU", "Laser" }, State.Ready) { Id = "12d8bfe4-498f-432d-862b-425b0843509c" });
         }
 
+        [TestMethod]
+        public async Task Transaction()
+        {
+            var t = await _con.CreateTransactionalBatch("oogi2")
+                .CreateItem(new Robot("Kiki", 100, true, null, State.Sleeping) { Id = "fb4fc1dd-181d-4f58-9197-bf5a794ccff9" })
+                .CreateItem(new Robot("Momo", 110, true, null, State.Sleeping) { Id = "a27f43c3-7a0d-41af-8076-25bf57fa5da2" })
+                .PatchItem("fb4fc1dd-181d-4f58-9197-bf5a794ccff9", new List<PatchOperation> { PatchOperation.Increment("/artificialIq", 100) })
+                .ExecuteAsync();
+
+            Assert.IsTrue(t.IsSuccessStatusCode);
+
+            var kiki = await _repo.GetFirstOrDefaultAsync("fb4fc1dd-181d-4f58-9197-bf5a794ccff9");
+            Assert.AreEqual(200, kiki.ArtificialIq);
+
+            t = await _con.CreateTransactionalBatch("oogi2")
+                .PatchItem("fb4fc1dd-181d-4f58-9197-bf5a794ccff9", new List<PatchOperation> { PatchOperation.Set("/artificialIq", 1) })
+                .PatchItem("a27f43c3-7a0d-41af-8076-25bf57fa5da2", new List<PatchOperation> { PatchOperation.Set("/artificialIq", 1) })
+                .CreateItem(new Robot("Fred", 100, true, null, State.Sleeping) { Id = "fb4fc1dd-181d-4f58-9197-bf5a794ccff9" })                                
+                .ExecuteAsync();
+
+            Assert.IsFalse(t.IsSuccessStatusCode);
+
+            kiki = await _repo.GetFirstOrDefaultAsync("fb4fc1dd-181d-4f58-9197-bf5a794ccff9");
+            Assert.AreEqual(200, kiki.ArtificialIq);
+
+            t = await _con.CreateTransactionalBatch("oogi2")
+                .PatchItem("fb4fc1dd-181d-4f58-9197-bf5a794ccff9", new List<PatchOperation> { PatchOperation.Set("/artificialIq", 1) })
+                .PatchItem("a27f43c3-7a0d-41af-8076-25bf57fa5da2", new List<PatchOperation> { PatchOperation.Set("/artificialIq", 2) })                
+                .ExecuteAsync();
+
+            kiki = await _repo.GetFirstOrDefaultAsync("fb4fc1dd-181d-4f58-9197-bf5a794ccff9");
+            Assert.AreEqual(1, kiki.ArtificialIq);
+
+            var momo = await _repo.GetFirstOrDefaultAsync("a27f43c3-7a0d-41af-8076-25bf57fa5da2");
+            Assert.AreEqual(2, momo.ArtificialIq);            
+        }
         // [TestMethod]
         // public async Task OptimisticConcurrency()
         // {

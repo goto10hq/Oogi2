@@ -258,6 +258,8 @@ namespace Oogi2
             return results;
         }
 
+        public TransactionalBatch CreateTransactionalBatch(string partitionKey = null) => Container.CreateTransactionalBatch(partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey));
+
         internal static bool SetId<T>(T entity)
         {
             PropertyInfo propInfoId = typeof(T).GetProperty("Id");
