@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Oogi2.BulkSupport;
 using Oogi2.Entities;
 using Oogi2.Queries;
 
@@ -169,6 +170,11 @@ namespace Oogi2
         public Task<List<T>> GetListAsync(string query, object parameters = null, QueryRequestOptions requestOptions = null)
         {
             return _repository.GetListHelperAsync(new DynamicQuery(query, parameters), requestOptions);
+        }
+
+        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations)
+        {
+            return _repository.ProcessBulkOperationsAsync(bulkOperations);
         }
     }
 }

@@ -12,7 +12,7 @@ using System.Reflection;
 using Sushi2;
 using Oogi2.Entities;
 using System.Dynamic;
-using Library.Helpers;
+using Oogi2.BulkSupport;
 
 namespace Oogi2
 {
@@ -51,15 +51,15 @@ namespace Oogi2
         {
             Tools.SetJsonDefaultSettings();
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="T:Oogi2.Connection"/> class.
-        /// </summary>
-        /// <param name="endpoint">Endpoint.</param>
-        /// <param name="authorizationKey">Authorization key.</param>
-        /// <param name="database">Database.</param>
-        /// <param name="container">Collection.</param>
-        /// <param name="options">Options.</param>
+        
+        public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey, bool allowBulkExecution) : this(endpoint, authorizationKey, database, container, partitionKey, new CosmosClientOptions 
+        {
+            Serializer = new CustomSerializer(),
+            AllowBulkExecution = allowBulkExecution
+        })
+        {            
+        }
+        
         public Connection(string endpoint, string authorizationKey, string database, string container, string partitionKey = null, CosmosClientOptions options = null)
         {
             CosmosClientOptions clientOptions = options ?? new CosmosClientOptions()
@@ -149,12 +149,10 @@ namespace Oogi2
 
             if (PartitionKey != PartitionKey.None)
             {
-                var be = item as BaseEntity;
-
-                if (be != null)             
-                    partitionKey = be.PartitionKey;                
-                else                
-                    partitionKey = GetPartitionKey(item);                
+                if (item is BaseEntity be)
+                    partitionKey = be.PartitionKey;
+                else
+                    partitionKey = GetPartitionKey(item);
             }
             
             var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey));
@@ -227,7 +225,7 @@ namespace Oogi2
             }
 
             return results;
-        }
+        }        
 
         internal static bool SetId<T>(T entity)
         {
@@ -310,6 +308,18 @@ namespace Oogi2
                 expando.Add("Id", Guid.NewGuid());
 
             return expando as ExpandoObject;
+        }
+
+        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations)
+        {
+            BulkOperations<T> bo = new BulkOperations<T>(bulkOperations.Count());
+
+            foreach(var op in bulkOperations)
+            {
+                bo.Tasks.Add(BulkSupport.Helpers.CaptureOperationResponse(op.Operation, op.Item));
+            }
+
+            return bo.ExecuteAsync();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Oogi2.BulkSupport;
 
 namespace Oogi2
 {
@@ -34,5 +35,6 @@ namespace Oogi2
         Task<T> ReplaceItemAsync<T>(T item);
         Task<bool> DeleteItemAsync<T>(T item);
         Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null);
+        Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations);
     }
 }
