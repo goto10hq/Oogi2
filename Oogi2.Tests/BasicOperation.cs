@@ -11,6 +11,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Newtonsoft.Json.Linq;
+using Oogi2.BulkSupport;
 
 namespace Tests
 {
@@ -50,7 +51,7 @@ namespace Tests
             await DeleteRobots();
 
             foreach (var robot in _robots)
-                await _repo.UpsertAsync(robot);            
+                await _repo.UpsertAsync(robot);
         }
 
         [TestCleanup]
@@ -63,7 +64,7 @@ namespace Tests
 
             var robots = await _repo.GetAllAsync();
 
-            foreach(var r in robots)
+            foreach (var r in robots)
             {
                 await _repo.DeleteAsync(r);
             }
@@ -234,7 +235,7 @@ namespace Tests
             Assert.IsNull((await _repo.GetFirstOrDefaultAsync(fakeRobot.Id)));
 
             var d = await _dynamic.GetFirstOrDefaultAsync(fakeRobot.Id);
-            
+
             Assert.AreEqual(fakeRobot.Id, ((JObject)d).SelectToken("id"));
         }
 
@@ -293,7 +294,7 @@ namespace Tests
 
             await _repo.DeleteAsync(dumbestRobotId, "oogi2");
 
-            var smartestRobot = robots[robots.Count - 1];
+            var smartestRobot = robots[^1];
 
             await _repo.DeleteAsync(smartestRobot);
 
@@ -307,8 +308,8 @@ namespace Tests
         public async Task CreateDynamic()
         {
             var repo = new CommonRepository<dynamic>(_con);
-            
-            var d1 = await repo.CreateAsync(new { Id = (string)null, Movie = "Donkey Kong Jr.", Rating = 3, PartitionKey = "oogi2", Entity = "movie" });            
+
+            var d1 = await repo.CreateAsync(new { Id = (string)null, Movie = "Donkey Kong Jr.", Rating = 3, PartitionKey = "oogi2", Entity = "movie" });
             Assert.IsNotNull(((JObject)d1).SelectToken("id"));
             Assert.AreEqual("Donkey Kong Jr.", ((JObject)d1).SelectToken("movie"));
 
@@ -334,6 +335,97 @@ namespace Tests
             await repo.DeleteAsync("3a80fdb6-6f34-4ac7-a4d0-df96592e6eda", "oogi2");
             movies = await repo.GetListAsync("select * from c where c.entity = 'movie' and c.rating <> null", null);
             Assert.AreEqual(0, movies.Count);
+        }
+
+        [TestMethod]
+        public async Task BulkInsert()
+        {
+            var appSettings = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json")
+                .AddUserSecrets("oogi2")
+                .AddEnvironmentVariables()
+                .Build();
+
+            var bulkCon = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"], "/partitionKey", true);
+            var bulkRepo = new Repository<FakeRobot>(bulkCon);
+
+            var bulkOperations = new List<BulkOperation<FakeRobot>>();
+
+            for (var i = 0; i < 3; i++)
+            {
+                var r = new FakeRobot($"X{i}", 100 + i, true, new List<string> { "CPU", "Laser" }, State.Ready);
+                bulkOperations.Add(new BulkOperation<FakeRobot>(bulkRepo.CreateAsync(r), r));
+            }
+
+            var results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
+            Assert.AreEqual(results.SuccessfulItems, 3);
+
+            var robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
+
+            var ids = new List<string>();
+            var counter = -1;
+
+            foreach (var r in robots)
+            {
+                counter++;
+                Assert.IsTrue(r.ArtificialIq == 100 + (counter));
+                Assert.AreEqual($"X{counter}", r.Name);
+                ids.Add(r.Id);
+            }
+
+            bulkOperations = new List<BulkOperation<FakeRobot>>();
+
+            foreach (var r in robots)
+            {
+                r.ArtificialIq += 100;
+                bulkOperations.Add(new BulkOperation<FakeRobot>(bulkRepo.UpsertAsync(r), r));
+            }
+
+            results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
+            Assert.AreEqual(results.SuccessfulItems, 3);
+
+            robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
+
+            counter = -1;
+
+            foreach (var r in robots)
+            {
+                counter++;
+                Assert.IsTrue(r.ArtificialIq == 200 + (counter));
+                Assert.AreEqual($"X{counter}", r.Name);                
+            }
+
+            var r1 = new FakeRobot($"NEW0", 100, true, null, State.Destroyed) { Id = "2b1a9672-0aea-4fca-a1f9-f4c5ebbd26d3" };
+            var r2 = new FakeRobot($"NEW1", 100, true, null, State.Destroyed) { Id = "2b1a9672-0aea-4fca-a1f9-f4c5ebbd26d3" };
+
+            bulkOperations = new List<BulkOperation<FakeRobot>>
+            {
+                new BulkOperation<FakeRobot>(bulkRepo.CreateAsync(r1), r1),
+                new BulkOperation<FakeRobot>(bulkRepo.CreateAsync(r2), r2)
+            };
+
+            results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
+
+            Assert.AreEqual(1, results.SuccessfulItems);
+            Assert.AreEqual(1, results.Failures.Count());
+
+            robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
+
+            Assert.AreEqual(4, robots.Count());
+
+            bulkOperations = new List<BulkOperation<FakeRobot>>();
+
+            foreach (var r in robots)
+            {
+                bulkOperations.Add(new BulkOperation<FakeRobot>(bulkRepo.DeleteAsync(r), r));
+            }
+
+            await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
+
+            robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();            
+
+            Assert.AreEqual(robots.Count(), 0);
         }
 
         // [TestMethod]

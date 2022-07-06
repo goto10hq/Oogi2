@@ -23,7 +23,7 @@ namespace Oogi2.BulkSupport
             return new BulkOperationResponse<T>()
             {
                 TotalTimeTaken = stopwatch.Elapsed,                
-                SuccessfulDocuments = Tasks.Count(task => task.Result.IsSuccessful),
+                SuccessfulItems = Tasks.Count(task => task.Result.IsSuccessful),
                 Failures = Tasks.Where(task => !task.Result.IsSuccessful).Select(task => (task.Result.Item, task.Result.CosmosException)).ToList()
             };
         }

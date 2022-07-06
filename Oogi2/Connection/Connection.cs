@@ -169,7 +169,7 @@ namespace Oogi2
 
             var responseMessage = await Container.UpsertItemAsync<T>(item);
 
-            if (responseMessage.StatusCode != HttpStatusCode.Created)
+            if (responseMessage.StatusCode != HttpStatusCode.OK && responseMessage.StatusCode != HttpStatusCode.Created)
                 throw new OogiException($"UpsertItemAsync failed with status code {responseMessage.StatusCode}.");
 
             return responseMessage.Resource;
