@@ -20,7 +20,7 @@ namespace Oogi2
         internal async Task<T> GetFirstOrDefaultHelperAsync()
         {
             var qq = new SqlQuerySpecQuery<T>();
-            var sqlq = qq.ToGetFirstOrDefault(new T());            
+            var sqlq = qq.ToGetFirstOrDefault(new T());
             var sq = sqlq.ToSqlQuery();
 
             return await _connection.QueryOneItemAsync<T>(sq);
@@ -31,7 +31,7 @@ namespace Oogi2
             if (query == null)
                 throw new ArgumentNullException(nameof(query));
 
-            QueryDefinition sqlq = query.ToGetFirstOrDefault();            
+            QueryDefinition sqlq = query.ToGetFirstOrDefault();
             var sq = sqlq.ToSqlQuery();
 
             return await _connection.QueryOneItemAsync<T>(sq);
@@ -72,10 +72,10 @@ namespace Oogi2
 
         internal Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _connection.ProcessBulkOperationsAsync<T>(bulkOperations);
 
-        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches) => _connection.PatchItemAsync<T>(id, partitionKey, patches);
-        
-        public Task<T> PatchAsync(string id, List<PatchOperation> patches) => _connection.PatchItemAsync<T>(id, null, patches);        
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, partitionKey, patches, filterPredicate);
 
-        public Task<T> PatchAsync(T entity, List<PatchOperation> patches) => _connection.PatchItemAsync(entity, patches);        
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, null, patches, filterPredicate);
+
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync(entity, patches, filterPredicate);
     }
 }

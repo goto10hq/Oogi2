@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Oogi2</PackageId>
     <Title>Oogi2</Title>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>frohikey</Authors>
     <PackageLicenseUrl>https://github.com/goto10hq/Oogi2/blob/master/LICENSE</PackageLicenseUrl>
     <Owners>Goto10</Owners>

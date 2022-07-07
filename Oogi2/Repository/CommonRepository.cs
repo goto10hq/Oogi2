@@ -142,5 +142,11 @@ namespace Oogi2
             var sq = new DynamicQuery(query, parameters).ToQueryDefinition().ToSqlQuery();
             return await _connection.QueryMoreItemsAsync<T>(sq, requestOptions);
         }
+
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, partitionKey, patches, filterPredicate);
+
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, null, patches, filterPredicate);
+
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync(entity, patches, filterPredicate);
     }
 }

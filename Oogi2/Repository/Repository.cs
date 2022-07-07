@@ -56,19 +56,19 @@ namespace Oogi2
 
         public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _repository.ProcessBulkOperationsAsync(bulkOperations);
 
-        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches)
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null)
         {
-            return _repository.PatchAsync(id, partitionKey, patches);
+            return _repository.PatchAsync(id, partitionKey, patches, filterPredicate);
         }
 
-        public Task<T> PatchAsync(string id, List<PatchOperation> patches)
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, string filterPredicate = null)
         {
-            return _repository.PatchAsync(id, null, patches);
+            return _repository.PatchAsync(id, null, patches, filterPredicate);
         }
 
-        public Task<T> PatchAsync(T entity, List<PatchOperation> patches)
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null)
         {
-            return _repository.PatchAsync(entity, patches);
+            return _repository.PatchAsync(entity, patches, filterPredicate);
         }
     }
 }

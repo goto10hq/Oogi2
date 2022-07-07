@@ -163,9 +163,14 @@ namespace Oogi2
             return true;
         }
 
-        public async Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches)
+        public async Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null)
         {
-            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches);
+            var requestOptions = new PatchItemRequestOptions
+            {
+                FilterPredicate = filterPredicate
+            };
+
+            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches, requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
                 throw new OogiException($"PatchItemAsync failed with status code {responseMessage.StatusCode}.");
@@ -173,7 +178,7 @@ namespace Oogi2
             return responseMessage.Resource;
         }
 
-        public async Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches)
+        public async Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches, string filterPredicate = null)
         {
             var id = GetId(item);
             string partitionKey = null;
@@ -186,7 +191,12 @@ namespace Oogi2
                     partitionKey = GetPartitionKey(item);
             }
 
-            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches);
+            var requestOptions = new PatchItemRequestOptions
+            {
+                FilterPredicate = filterPredicate
+            };
+
+            var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches, requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
                 throw new OogiException($"PatchItemAsync failed with status code {responseMessage.StatusCode}.");
