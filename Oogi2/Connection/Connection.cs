@@ -81,7 +81,7 @@ namespace Oogi2
 
             Container = Client.GetContainer(database, container);
         }
-        
+
         public async Task<List<T>> UpsertJsonAsync<T>(string jsonString)
         {
             if (jsonString == null)
@@ -127,9 +127,9 @@ namespace Oogi2
         //    return true;
         //}
 
-        public async Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null)
+        public async Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null, ItemRequestOptions requestOptions = null)
         {
-            var responseMessage = await Container.DeleteItemAsync<T>(id, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey));
+            var responseMessage = await Container.DeleteItemAsync<T>(id, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.NoContent)
                 throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
@@ -137,7 +137,7 @@ namespace Oogi2
             return true;
         }
 
-        public async Task<bool> DeleteItemAsync<T>(T item)
+        public async Task<bool> DeleteItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
         {
             var id = GetId(item);
             string partitionKey = null;
@@ -150,7 +150,7 @@ namespace Oogi2
                     partitionKey = GetPartitionKey(item);
             }
 
-            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey));
+            var responseMessage = await Container.DeleteItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.NoContent)
                 throw new OogiException($"DeleteItemAsync failed with status code {responseMessage.StatusCode}.");
@@ -165,6 +165,11 @@ namespace Oogi2
                 FilterPredicate = filterPredicate
             };
 
+            return await PatchItemAsync<T>(id, partitionKey, patches, requestOptions);
+        }
+
+        public async Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches, PatchItemRequestOptions requestOptions)
+        {
             var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches, requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
@@ -174,6 +179,16 @@ namespace Oogi2
         }
 
         public async Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches, string filterPredicate = null)
+        {
+            var requestOptions = new PatchItemRequestOptions
+            {
+                FilterPredicate = filterPredicate
+            };
+
+            return await PatchItemAsync(item, patches, requestOptions);
+        }
+
+        public async Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches, PatchItemRequestOptions requestOptions)
         {
             var id = GetId(item);
             string partitionKey = null;
@@ -186,11 +201,6 @@ namespace Oogi2
                     partitionKey = GetPartitionKey(item);
             }
 
-            var requestOptions = new PatchItemRequestOptions
-            {
-                FilterPredicate = filterPredicate
-            };
-
             var responseMessage = await Container.PatchItemAsync<T>(id, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), patches, requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
@@ -199,11 +209,20 @@ namespace Oogi2
             return responseMessage.Resource;
         }
 
-        public async Task<T> UpsertItemAsync<T>(T item)
+        public async Task<T> UpsertItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
         {
             SetId(item);
+            string partitionKey = null;
 
-            var responseMessage = await Container.UpsertItemAsync<T>(item);
+            if (PartitionKey != PartitionKey.None)
+            {
+                if (item is BaseEntity be)
+                    partitionKey = be.PartitionKey;
+                else
+                    partitionKey = GetPartitionKey(item);
+            }
+
+            var responseMessage = await Container.UpsertItemAsync(item, PartitionKey == PartitionKey.None ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK && responseMessage.StatusCode != HttpStatusCode.Created)
                 throw new OogiException($"UpsertItemAsync failed with status code {responseMessage.StatusCode}.");
@@ -211,13 +230,23 @@ namespace Oogi2
             return responseMessage.Resource;
         }
 
-        public async Task<T> CreateItemAsync<T>(T item)
+        public async Task<T> CreateItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
         {
+            string partitionKey = null;
+
+            if (PartitionKey != PartitionKey.None)
+            {
+                if (item is BaseEntity be)
+                    partitionKey = be.PartitionKey;
+                else
+                    partitionKey = GetPartitionKey(item);
+            }
+
             if (!SetId(item))
             {
                 var d = SetIdToDynamic(item);
 
-                var responseMessageD = await Container.CreateItemAsync<T>(d);
+                var responseMessageD = await Container.CreateItemAsync<T>(d, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
                 if (responseMessageD.StatusCode != HttpStatusCode.Created)
                     throw new OogiException($"CreateItemAsync failed with status code {responseMessageD.StatusCode}.");
@@ -225,7 +254,7 @@ namespace Oogi2
                 return responseMessageD.Resource;
             }
 
-            var responseMessage = await Container.CreateItemAsync(item);
+            var responseMessage = await Container.CreateItemAsync(item, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.Created)
                 throw new OogiException($"CreateItemAsync failed with status code {responseMessage.StatusCode}.");
@@ -233,11 +262,21 @@ namespace Oogi2
             return responseMessage.Resource;
         }
 
-        public async Task<T> ReplaceItemAsync<T>(T item)
+        public async Task<T> ReplaceItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
         {
             var id = GetId(item);
 
-            var responseMessage = await Container.ReplaceItemAsync<T>(item, id);
+            string partitionKey = null;
+
+            if (PartitionKey != PartitionKey.None)
+            {
+                if (item is BaseEntity be)
+                    partitionKey = be.PartitionKey;
+                else
+                    partitionKey = GetPartitionKey(item);
+            }
+
+            var responseMessage = await Container.ReplaceItemAsync<T>(item, id, partitionKey == null ? PartitionKey.None : new PartitionKey(partitionKey), requestOptions);
 
             if (responseMessage.StatusCode != HttpStatusCode.OK)
                 throw new OogiException($"ReplaceItemAsync failed with status code {responseMessage.StatusCode}.");

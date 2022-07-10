@@ -30,15 +30,15 @@ namespace Oogi2
 
         public Task<T> GetFirstOrDefaultAsync(string id, string partitionKey = null) => _repository.GetFirstOrDefaultHelperAsync(new IdQuery<T>(id, partitionKey));
 
-        public Task<T> UpsertAsync(T entity) => _repository.UpsertItemAsync(entity);
+        public Task<T> UpsertAsync(T entity, ItemRequestOptions requestOptions = null) => _repository.UpsertItemAsync(entity, requestOptions);
 
-        public Task<T> CreateAsync(T entity) => _repository.CreateItemAsync(entity);
+        public Task<T> CreateAsync(T entity, ItemRequestOptions requestOptions = null) => _repository.CreateItemAsync(entity, requestOptions);
 
-        public Task<T> ReplaceAsync(T entity) => _repository.ReplaceItemAsync(entity);
+        public Task<T> ReplaceAsync(T entity, ItemRequestOptions requestOptions = null) => _repository.ReplaceItemAsync(entity, requestOptions);
 
-        public Task<bool> DeleteAsync(string id, string partitionKey = null) => _repository.DeleteItemAsync(id, partitionKey);
+        public Task<bool> DeleteAsync(string id, string partitionKey = null, ItemRequestOptions requestOptions = null) => _repository.DeleteItemAsync(id, partitionKey, requestOptions);
 
-        public Task<bool> DeleteAsync(T entity) => _repository.DeleteItemAsync(entity);
+        public Task<bool> DeleteAsync(T entity, ItemRequestOptions requestOptions = null) => _repository.DeleteItemAsync(entity, requestOptions);
 
         public Task<List<T>> GetAllAsync(QueryRequestOptions requestOptions = null)
         {
@@ -56,19 +56,16 @@ namespace Oogi2
 
         public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _repository.ProcessBulkOperationsAsync(bulkOperations);
 
-        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null)
-        {
-            return _repository.PatchAsync(id, partitionKey, patches, filterPredicate);
-        }
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null) => _repository.PatchAsync(id, partitionKey, patches, filterPredicate);
 
-        public Task<T> PatchAsync(string id, List<PatchOperation> patches, string filterPredicate = null)
-        {
-            return _repository.PatchAsync(id, null, patches, filterPredicate);
-        }
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, string filterPredicate = null) => _repository.PatchAsync(id, null, patches, filterPredicate);
 
-        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null)
-        {
-            return _repository.PatchAsync(entity, patches, filterPredicate);
-        }
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null) => _repository.PatchAsync(entity, patches, filterPredicate);
+
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _repository.PatchAsync(id, partitionKey, patches, requestOptions);
+
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _repository.PatchAsync(id, null, patches, requestOptions);
+
+        public Task<T> PatchAsync(T entity, List<PatchOperation> patches, PatchItemRequestOptions requestOptions) => _repository.PatchAsync(entity, patches, requestOptions);
     }
 }
