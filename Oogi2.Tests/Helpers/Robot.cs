@@ -15,10 +15,7 @@ namespace Oogi2.Tests.Helpers
         public IEnumerable<string> Parts { get; set; } = new List<string>();
         public string Message { get; set; }
         public State State { get; set; }
-
-        [JsonProperty("_etag")]
-        public string ETag { get; set; }
-
+        
         public override string PartitionKey => "oogi2";
 
         public override string Entity => Entities.Robot;

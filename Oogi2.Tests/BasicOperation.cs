@@ -508,35 +508,36 @@ namespace Tests
             var momo = await _repo.GetFirstOrDefaultAsync("a27f43c3-7a0d-41af-8076-25bf57fa5da2");
             Assert.AreEqual(2, momo.ArtificialIq);            
         }
-        // [TestMethod]
-        // public async Task OptimisticConcurrency()
-        // {
-        //     var robot = await _repo.GetFirstOrDefaultAsync("select top 1 * from c where c.entity = @entity order by c.artificialIq", new { entity = Robot.Entity }).ConfigureAwait(false);
 
-        //     var ro = new RequestOptions { AccessCondition = new AccessCondition { Condition = robot.ETag, Type = AccessConditionType.IfMatch } };
+        [TestMethod]
+        public async Task OptimisticConcurrency()
+        {
+            var robot = await _repo.GetFirstOrDefaultAsync("select top 1 * from c where c.entity = @entity order by c.artificialIq", new { entity = Entities.Robot }).ConfigureAwait(false);
 
-        //     var ro2 = await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
+            var ro = new ItemRequestOptions { IfMatchEtag = robot.Etag };
 
-        //     Assert.AreNotEqual(robot.ETag, ro2.ETag);
+            var ro2 = await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
 
-        //     var ok = false;
+            Assert.AreNotEqual(robot.Etag, ro2.Etag);
 
-        //     try
-        //     {
-        //         await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
-        //     }
-        //     catch (OogiException)
-        //     {
-        //         ok = true;
-        //     }
+            var ok = false;
 
-        //     Assert.AreEqual(true, ok);
+            try
+            {
+                await _repo.ReplaceAsync(robot, ro).ConfigureAwait(false);
+            }
+            catch (CosmosException)
+            {
+                ok = true;
+            }
 
-        //     ok = false;
-        //     await _repo.ReplaceAsync(robot).ConfigureAwait(false);
-        //     ok = true;
+            Assert.AreEqual(true, ok);
 
-        //     Assert.AreEqual(true, ok);
-        // }
+            ok = false;
+            await _repo.ReplaceAsync(robot).ConfigureAwait(false);
+            ok = true;
+
+            Assert.AreEqual(true, ok);
+        }
     }
 }
