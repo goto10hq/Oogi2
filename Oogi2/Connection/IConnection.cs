@@ -31,8 +31,8 @@ namespace Oogi2
         Task<T> QueryOneItemAsync<T>(string query);
         Task<List<T>> QueryMoreItemsAsync<T>(string query, QueryRequestOptions requestOptions);
         Task<T> UpsertItemAsync<T>(T item, ItemRequestOptions requestOptions = null);
-        Task<T> CreateItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
-        Task<T> ReplaceItemAsync<T>(T item, ItemRequestOptions requestOptions = null)
+        Task<T> CreateItemAsync<T>(T item, ItemRequestOptions requestOptions = null);
+        Task<T> ReplaceItemAsync<T>(T item, ItemRequestOptions requestOptions = null);
         Task<bool> DeleteItemAsync<T>(T item, ItemRequestOptions requestOptions = null);
         Task<bool> DeleteItemAsync<T>(string id, string partitionKey = null, ItemRequestOptions requestOptions = null);
         Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null);

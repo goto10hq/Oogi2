@@ -70,7 +70,7 @@ namespace Oogi2.Tokens
             if (ReferenceEquals(this, obj))
                 return 0;
 
-            if (ReferenceEquals(null, obj))
+            if (obj is null)
                 return 1;
 
             if (!(obj is IStamp))

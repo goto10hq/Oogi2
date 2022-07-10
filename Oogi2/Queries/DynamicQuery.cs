@@ -27,14 +27,12 @@ namespace Oogi2.Queries
             if (parameters == null)
                 return sqlqs;
 
-            var pc = parameters as IReadOnlyList<(string Name, object Value)>;
-            
-            if (pc != null)
+            if (parameters is IReadOnlyList<(string Name, object Value)> pc)
             {
                 var result = new QueryDefinition(sqlqs.QueryText);
 
-                foreach (var p in pc)
-                    result = result.WithParameter(p.Name, p.Value);
+                foreach (var (Name, Value) in pc)
+                    result = result.WithParameter(Name, Value);
 
                 return result;
             }
@@ -53,7 +51,7 @@ namespace Oogi2.Queries
                 }
 
                 return result;
-            }            
+            }
         }
 
         public QueryDefinition ToQueryDefinition(T item) => SqlQuerySpec;
@@ -67,7 +65,7 @@ namespace Oogi2.Queries
             }
 
             return SqlQuerySpec;
-        }        
+        }
 
         public QueryDefinition ToGetAll(T item)
         {
@@ -87,12 +85,12 @@ namespace Oogi2.Queries
     }
 
     public class DynamicQuery : IQuery
-    {        
-        QueryDefinition _sqlQuerySpec;
+    {
+        readonly QueryDefinition _sqlQuerySpec;
         QueryDefinition SqlQuerySpec => _sqlQuerySpec;
 
         public DynamicQuery(string sql, object parameters = null)
-        {            
+        {
             _sqlQuerySpec = ConvertToSqlQuerySpec(sql, parameters);
         }
 
@@ -106,9 +104,7 @@ namespace Oogi2.Queries
             if (parameters == null)
                 return sqlqs;
 
-            var pc = parameters as IReadOnlyList<(string Name, object Value)>;
-
-            if (pc != null)
+            if (parameters is IReadOnlyList<(string Name, object Value)> pc)
             {
                 var result = new QueryDefinition(sqlqs.QueryText);
 

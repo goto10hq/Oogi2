@@ -62,9 +62,9 @@ namespace Oogi2
 
         public Task<T> PatchAsync(T entity, List<PatchOperation> patches, string filterPredicate = null) => _repository.PatchAsync(entity, patches, filterPredicate);
 
-        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _repository.PatchAsync(id, partitionKey, patches, requestOptions);
+        public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, PatchItemRequestOptions requestOptions) => _repository.PatchAsync(id, partitionKey, patches, requestOptions);
 
-        public Task<T> PatchAsync(string id, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _repository.PatchAsync(id, null, patches, requestOptions);
+        public Task<T> PatchAsync(string id, List<PatchOperation> patches, PatchItemRequestOptions requestOptions) => _repository.PatchAsync(id, null, patches, requestOptions);
 
         public Task<T> PatchAsync(T entity, List<PatchOperation> patches, PatchItemRequestOptions requestOptions) => _repository.PatchAsync(entity, patches, requestOptions);
     }
