@@ -81,12 +81,7 @@ namespace Oogi2
 
             Container = Client.GetContainer(database, container);
         }
-
-        /// <summary>
-        /// Upserts the json document(s) directly.
-        /// </summary>
-        /// <returns>A list of documents.</returns>
-        /// <param name="jsonString">Json string.</param>
+        
         public async Task<List<T>> UpsertJsonAsync<T>(string jsonString)
         {
             if (jsonString == null)
