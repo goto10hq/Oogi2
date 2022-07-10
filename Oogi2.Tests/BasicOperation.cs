@@ -350,6 +350,11 @@ namespace Tests
             var bulkCon = new Connection(appSettings["endpoint"], appSettings["authorizationKey"], appSettings["database"], appSettings["collection"], "/partitionKey", true);
             var bulkRepo = new Repository<FakeRobot>(bulkCon);
 
+            var robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity", new { entity = Entities.FakeRobot })).ToList();
+
+            foreach (var r in robots)
+                await bulkRepo.DeleteAsync(r);
+
             var bulkOperations = new List<BulkOperation<FakeRobot>>();
 
             for (var i = 0; i < 3; i++)
@@ -361,7 +366,7 @@ namespace Tests
             var results = await bulkRepo.ProcessBulkOperationsAsync(bulkOperations);
             Assert.AreEqual(results.SuccessfulItems, 3);
 
-            var robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
+            robots = (await bulkRepo.GetListAsync("select * from c where c.entity = @entity order by c.name", new { entity = Entities.FakeRobot })).ToList();
 
             var ids = new List<string>();
             var counter = -1;
