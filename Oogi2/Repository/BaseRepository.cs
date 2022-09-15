@@ -83,5 +83,17 @@ namespace Oogi2
         public Task<T> PatchAsync(string id, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _connection.PatchItemAsync<T>(id, null, patches, requestOptions);
 
         public Task<T> PatchAsync(T entity, List<PatchOperation> patches, PatchItemRequestOptions requestOptions = null) => _connection.PatchItemAsync(entity, patches, requestOptions);
+
+        public Task<T> PatchAsync(string id, string partitionKey, PatchOperation patch, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, partitionKey, new List<PatchOperation> { patch }, filterPredicate);
+
+        public Task<T> PatchAsync(string id, PatchOperation patch, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, null, new List<PatchOperation> { patch }, filterPredicate);
+
+        public Task<T> PatchAsync(T entity, PatchOperation patch, string filterPredicate = null) => _connection.PatchItemAsync(entity, new List<PatchOperation> { patch }, filterPredicate);
+
+        public Task<T> PatchAsync(string id, string partitionKey, PatchOperation patch, PatchItemRequestOptions requestOptions = null) => _connection.PatchItemAsync<T>(id, partitionKey, new List<PatchOperation> { patch }, requestOptions);
+
+        public Task<T> PatchAsync(string id, PatchOperation patch, PatchItemRequestOptions requestOptions = null) => _connection.PatchItemAsync<T>(id, null, new List<PatchOperation> { patch }, requestOptions);
+
+        public Task<T> PatchAsync(T entity, PatchOperation patch, PatchItemRequestOptions requestOptions = null) => _connection.PatchItemAsync(entity, new List<PatchOperation> { patch }, requestOptions);
     }
 }
