@@ -54,7 +54,7 @@ namespace Oogi2
 
         public Task<List<T>> GetListAsync(string query, object parameters = null, QueryRequestOptions requestOptions = null) => _repository.GetListHelperAsync(new DynamicQuery(query, parameters), requestOptions);
 
-        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _repository.ProcessBulkOperationsAsync(bulkOperations);
+        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations, int? dop = null) => _repository.ProcessBulkOperationsAsync(bulkOperations, dop);
 
         public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null) => _repository.PatchAsync(id, partitionKey, patches, filterPredicate);
 

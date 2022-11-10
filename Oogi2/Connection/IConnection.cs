@@ -39,7 +39,7 @@ namespace Oogi2
         Task<T> PatchItemAsync<T>(string id, string partitionKey, List<PatchOperation> patches, PatchItemRequestOptions requestOptions);
         Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches, string filterPredicate = null);
         Task<T> PatchItemAsync<T>(T item, List<PatchOperation> patches, PatchItemRequestOptions requestOptions);
-        Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations);
+        Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations, int? dop = null);
         TransactionalBatch CreateTransactionalBatch(string partitionKey = null);
     }
 }

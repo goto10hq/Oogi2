@@ -387,7 +387,7 @@ namespace Oogi2
             return expando as ExpandoObject;
         }
 
-        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations)
+        public Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync<T>(List<BulkOperation<T>> bulkOperations, int? dop)
         {
             BulkOperations<T> bo = new BulkOperations<T>(bulkOperations.Count());
 
@@ -396,7 +396,10 @@ namespace Oogi2
                 bo.Tasks.Add(BulkSupport.Helpers.CaptureOperationResponse(op.Operation, op.Item));
             }
 
-            return bo.ExecuteAsync();
+            if (dop == null)
+                return bo.ExecuteAsync();
+
+            return bo.ExecuteAsync(dop.Value);
         }
     }
 }

@@ -70,7 +70,7 @@ namespace Oogi2
             return _connection.QueryMoreItemsAsync<T>(sq, requestOptions);
         }
 
-        internal Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations) => _connection.ProcessBulkOperationsAsync<T>(bulkOperations);
+        internal Task<BulkOperationResponse<T>> ProcessBulkOperationsAsync(List<BulkOperation<T>> bulkOperations, int? dop = null) => _connection.ProcessBulkOperationsAsync<T>(bulkOperations, dop);
 
         public Task<T> PatchAsync(string id, string partitionKey, List<PatchOperation> patches, string filterPredicate = null) => _connection.PatchItemAsync<T>(id, partitionKey, patches, filterPredicate);
 
